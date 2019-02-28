@@ -39,13 +39,13 @@ def view_command():
 
 def search_command():
     list1.delete(0,END)
-    for row in backend.search(title_text.get(),author_text.get(),year_text.get(),isbn_text.get()):
+    for row in backend.search(name_text.get(),manufac_text.get(),status_text.get(),serial_text.get()):
         list1.insert(END,row)
 
 def add_command():
-    backend.insert(title_text.get(),author_text.get(),year_text.get(),isbn_text.get())
+    backend.insert(name_text.get(),manufac_text.get(),status_text.get(),serial_text.get())
     list1.delete(0,END)
-    list1.insert(END,(title_text.get(),author_text.get(),year_text.get(),isbn_text.get()))
+    list1.insert(END,(name_text.get(),manufac_text.get(),status_text.get(),serial_text.get()))
     view_command()
 
 def delete_command():
@@ -53,7 +53,7 @@ def delete_command():
     view_command()
 
 def update_command():
-    backend.update(selected_tuple[0],title_text.get(),author_text.get(),year_text.get(),isbn_text.get())
+    backend.update(selected_tuple[0],name_text.get(),manufac_text.get(),status_text.get(),serial_text.get())
     view_command()
 
 window=Tk()
@@ -75,20 +75,20 @@ l4.grid(row=1,column=2)
 l5=Label(window, text="BAM-Nummer")
 l5.grid(row=2, column=3)
 
-title_text=StringVar()
-e1=Entry(window,textvariable=title_text)
+name_text=StringVar()
+e1=Entry(window,textvariable=name_text)
 e1.grid(row=0,column=1)
 
-author_text=StringVar()
-e2=Entry(window,textvariable=author_text)
+manufac_text=StringVar()
+e2=Entry(window,textvariable=manufac_text)
 e2.grid(row=0,column=3)
 
-year_text=StringVar()
-e3=Entry(window,textvariable=year_text)
+status_text=StringVar()
+e3=Entry(window,textvariable=status_text)
 e3.grid(row=1,column=1)
 
-isbn_text=StringVar()
-e4=Entry(window,textvariable=isbn_text)
+serial_text=StringVar()
+e4=Entry(window,textvariable=serial_text)
 e4.grid(row=1,column=3)
 
 bam_text=StringVar()
