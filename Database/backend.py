@@ -56,7 +56,7 @@ def book(id,year):
 def pool(id,year):
     conn=sqlite3.connect("books.db")
     cur=conn.cursor()
-    cur.execute("UPDATE book SET year='pool' WHERE id=?",())
+    cur.execute("UPDATE book SET year='pool' WHERE id=?",(id,))
     conn.commit()
     conn.close()
 

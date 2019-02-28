@@ -13,8 +13,8 @@ def get_selected_row(event):
     e3.insert(END,selected_tuple[3])
     e4.delete(0,END)
     e4.insert(END,selected_tuple[4])
-    e5.delete(0,END)
-    e5.insert(END,selected_tuple[5])
+    #e5.delete(0,END)
+    #e5.insert(END,selected_tuple[5])
 
 def book_selected():
 
