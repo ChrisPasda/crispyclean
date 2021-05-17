@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html lang="de">
+
+   <title>Ticketsystem Schulungen Notebooks </title>
+   <head>
+     <link href ="../static/main.css" rel = "stylesheet" >
+   </head>
+   <img src="https://media-exp1.licdn.com/dms/image/C4D0BAQGF5MDIlgDnKg/company-logo_200_200/0/1586869959484?e=2159024400&v=beta&t=lDYgV8kKWk4Dlhe3PW6Q61M_47LoWUoo-ojinrdD5O0" height = "100">
+      <body>
+        <div class = "container">
+          <h1>Hardware-Bestellung DKB IT-Dienste</h1>
+          <h3>Bitte BAM, Anzahl und Unternehmen angeben </h3>
+          <form action="{{url_for('success')}}" method="POST">
+            <input title="Bitte geben Sie die BAM ein" placeholder = "BAM eingeben" type ="integer" name ="bam_name" required><br>
+            <input title="Anzahl der Leihnotebooks" placeholder = "Anzahl der Notebooks" type ="number" min ="1", max = "30" name ="anzahl_name" required><br>
+            <select name="company_name">
+               <option value="Bank">Bank</option>
+               <option value="Service">Service</option><br>
+            </select><br>
+            <button type= "submit">Buchen</button>
+          </form>
+        </div>
+      </body>
+</html>
