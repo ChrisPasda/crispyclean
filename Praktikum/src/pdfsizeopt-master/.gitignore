@@ -1,0 +1,13 @@
+*~
+*.pyc
+Multivalent.jar
+MultivalentCompress.jar
+pdfsizeopt_libexec/
+pdfsizeopt_libexec_linux-v2.tar.gz
+pdfsizeopt.exe
+pdfsizeopt_win32exec-v*.zip
+pdfsizeopt_win32exec/
+docker/busybox
+docker/pdfsizeopt.single
+docker/pdfsizeopt_libexec_linux.tar.gz
+docker_extraimgopt/pdfsizeopt_libexec_extraimgopt_linux.tar.gz

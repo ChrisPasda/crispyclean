@@ -1,0 +1,579 @@
+
+\subsection{Konzept}
+\label{sec:Konzept}
+
+Der konzeptionelle Entwurf soll mit dem Anwendungsfall-Diagramm für die Software zum semiautomatischen Labeln von Schienen begonnen werden. Danach erfolgt eine Übersicht über das Flussdiagramm und die Implementierungen. Abschließend werden die Ergebnisse in einer Qualitätsanalyse kritisch betrachtet. Die in den vorangegangenen Kapiteln aufgenommenen Anforderungen und Begrifflichkeiten sollen hier direkt in die Modellbildung mit einbezogen werden. Der schriftlichen Ausarbeitung, welche zur Verständlichkeit in einem hohen Abstraktionslevel gehalten wird, folgen Diagramme, welche die wesentlichen Funktionalitäten der Software modellhaft dokumentieren.
+
+\subsubsection{Anwendungsfall-Diagramm ``Labeltool`` Grundsystem}
+\label{sec:Anwendungsfall-Diagramm ``Labeltool`` Grundsystem}
+An diesem Anwendungsfall ist nur der Aktor ``User`` beteiligt. Er beschriebt die Kernfunktionalitäten des vorliegenden Systems.
+
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{usecaselabelgrund}
+  \caption{Grundsystem LabelTool}
+\end{figure}
+
+\noindent
+\textbf{Use Case:} Bild labeln
+\\ 
+
+\noindent
+\textbf{Kurzbeschreibung:} Der User möchte die Schienen in einem Bild markieren, damit diese in maschinenverständliche Daten umgewandelt werden, um ein neuronales Netzwerk damit trainieren zu können. Für Benchmarks und andere Anwendungen sollen neben den Punkten auf den Schienen auch die Mittelpunkt in einer yaml-Datein gespeichert werden. Zuletzt soll eine Datei generiert werden, welche die Polygonpunkte von Labels einem Drittanbieter zur Weiterverarbeitung verständlich macht.
+\\ 
+
+\noindent
+\textbf{Primärer Aktor:} User
+\\ 
+
+\noindent
+\textbf{Vorbedingungen:} Die Bilder, welche in das Programm geladen werden sollen, müssen auf dem Computer gespeichert sein. Es muss eine lesbare Kamera-Matrix-Datein vorhanden sein. 
+\\ 
+
+\noindent
+\textbf{Nachbedingung:} Wenn ein Bild markiert wurde, dann werden die Schienen und das Schienenbett mit eigenen Labels exakt abgebildet. Werden die Segmentierungsinformationen generiert, dann besitzt das konvertierte Bild den Datentyp uint8. Werden die Labels gespeichert, dann wird eine extra Datei erstellt, welche nur die Labels beinhaltet, die in einem anderen Programm neu geladenen und wieder bearbeitet werden können.
+\\ 
+
+\noindent
+\textbf{Erfolgsszenario:}
+
+\begin{enumerate}
+	\item Der User startet das Programm mit den Parametern der Kamera-Matrix und des Bilderordners
+	\item Das Programm lädt die Kamera-Matrix und zeigt das erste Bild aus dem Ordner an
+	\item Das Programm erstellt ein neues Label \textit{Ego Track} und wählt dieses aus
+	\item Der User kalibriert die Messlinie
+	\item Das Programm verlängert, verkürzt die Messlinie oder wechselt die Fokusseite
+	\item Der User setzt Punkte entlang der Schiene
+	\item Das Programm speichert die Punkte in einem Vektor und berechnet damit das Catmull Rom-Polygon
+	\item Das Programm zeichnet das Label aus dem Catmull Rom-Polygon-Vektor
+	\item Der User erstellt ein neues Label während er seine Maus links oder rechts neben dem \textit{Ego Track} für das jeweilige Label hält
+	\item Das Programm erkennt auf welcher Seite ein neues Label erstellt werden soll und erstellt dieses
+	\item Der User setzt Punkte entlang der Schiene
+	\item Das Programm speichert die Punkte in einem Vektor und berechnet damit das Catmull Rom-Polygon
+	\item Das Programm zeichnet das Label aus dem Catmull Rom-Polygon-Vektor
+	\item Der User wechselt auf das nächste Bild
+	\item Das Programm erstellt die Segmentierungsinformationen und speichert diese in seperaten Ordnern
+	\item Das Szenario endet erfolgreich
+\end{enumerate}
+\textbf{Erweiterungen:}
+\\ 
+\noindent
+(4-15)a. Der User beendet das Programm
+\\ 
+\noindent
+(4-15)a.1 Das Programm beendet sich
+\\ 
+\noindent
+(4-15)a.2 Das Szenario endet erfolglos
+\\
+
+\noindent
+(1-2)a. Der User gibt eine falsche Kamera-Matrix-Datei an
+\\ 
+\noindent
+(1-2)a.1 Das Programm zeigt an, dass die Kamera-Matrix-Datei nicht gelesen werden konnte
+\\ 
+\noindent
+(1-2)a.2 Das Szenario endet erfolglos
+\\ 
+
+\noindent
+(1-3)b. Es befinden sich schon yaml-Datein mit Mittelpunkten der Schienen im Bilderordner
+\\ 
+\noindent
+(1-3)b.1  Das Programm erstellt ein neues Label, speichert die Punkte in einem Vektor und berechnet damit das Catmull Rom-Polygon
+\\ 
+\noindent
+(1-3)b.2 Das Programm zeichnet das Label aus dem Catmull Rom-Polygon-Vektor
+\\
+
+\noindent
+(9-13)a Der User wählt eine andere Schiene aus
+\\ 
+\noindent
+(9-13)a.1 Das Programm selektiert die neu angewählte Schiene
+\\
+
+\noindent
+(6-13)a. Der User löscht einen Punkt auf der ausgewählten Schiene
+\\ 
+\noindent
+(6-13)a.1 Das Programm entfernt diesen Punkt aus dem Vektor und berechnet das Catmull Rom-Polygon neu
+\\ 
+\noindent
+(6-13)a.2 Das Programm zeichnet das Label aus dem Catmull Rom-Polygon-Vektor
+\\ 
+
+\noindent
+(6-13)b. Der User löscht ein Label
+\\ 
+\noindent
+(6-13)b.1 Das Programm entfernt das Label 
+\\ 
+
+\noindent
+(14-15)a Es befinden sich schon Segemtierungsdaten mit der gleichen Bezeichnung in den Ordnern
+\\ 
+\noindent
+(14-15)a.1 Das Programm speichert die Daten nur, wenn der \textit{Saving Modus} aktiv ist
+
+\subsubsection{Anwendungsfall ``start``}
+\label{sec:Anwendungsfall ``start``}
+
+Der Start des Programms beinhaltet folgende Schritte:
+\\
+
+\noindent
+``load camera matrix``
+\begin{itemize}
+	\item Der User startet das Programm unter Angabe der Kameramatrix, sollte diese nicht den Vorgaben entsprechen, startet das Programm nicht
+\end{itemize}
+``load image``
+\begin{itemize}
+	\item Der User startet das Programm unter Angabe der Bildatei
+	\item Dabei kann es sich um ein einzelnes oder mehrere Bilder in einem Ordner handeln
+	\item Der Anwendungsfall wird erweitert, sollten sich yaml-Datein mit Mittelpunkten in dem Ordner befinden
+	\item Das Programm erstellt ein neues Label und berechnet die Polygone der Schienen anhand der Mittelpunkte
+\end{itemize}
+\begin{figure}[H]
+  \includegraphics[width=0.5\textwidth]{usecasestart}
+  \caption{Anwendungsfall ``start``}
+\end{figure}
+
+\subsubsection{Anwendungsfall ``create Label``}
+\label{sec:Anwendungsfall ``create Label``}
+
+Mit diesem Anwendungsfall ergeben sich für den User folgende Auswahlmöglichkeiten:
+\\
+
+\noindent
+``right label``
+\begin{itemize}
+	\item Beim Halten der Maus rechts neben dem \textit{Ego Track} wird ein neues Label für einen rechten Nachbarn erstellt
+\end{itemize}
+``left label``
+\begin{itemize}
+	\item Beim Halten der Maus links neben dem \textit{Ego Track} wird ein neues Label für einen linken Nachbarn erstellt
+\end{itemize}
+\begin{figure}[H]
+  \includegraphics[width=0.5\textwidth]{createlabel}
+  \caption{Anwendungsfall ``create label``}
+\end{figure}
+
+\subsubsection{Anwendungsfall ``select label``}
+\label{sec:Anwendungsfall ``select label``}
+
+Dieser Anwedungsfall beschreibt die Situation des Auswählen eines vorhandenen Labels. 
+\\
+
+\noindent
+``select label``
+\begin{itemize}
+	\item Der User wählt das Label aus, welches er bearbeiten möchte. Dabei ist die Anzahl der zu wählenden Label abhängig von der Anzahl der vorher erstellten Label.
+\end{itemize}
+
+\noindent
+``alter label``
+\begin{itemize}
+	\item Nachdem ein Label gewählt wurde, wird die entsprechende Schiene ausgewählt und kann verändert werden. Dieser Use Case wird dadurch erweitert, dass der User entsprechend Punkte setzen oder löschen  kann. Der User ist auch in der Lage ein komplettes Label zu löschen.
+\end{itemize}
+
+
+\begin{figure}[H]
+  \includegraphics[width=0.7\textwidth]{usecaseselect}
+  \caption{Anwendungsfall ``select label``}
+\end{figure}
+
+
+\subsubsection{Anwendungsfall ``calibrate gauge-line``}
+\label{sec:Anwendungsfall ``calibrate helpbar`` }
+
+In diesem Anwendungsfall verändert der User die Messlinie, indem er sie an die Schienen anpasst. Dazu vergrößert, verkleinert er die Messlinie und wechselt den Fokuspunkt.
+\\
+
+\noindent
+``increase length``
+\begin{itemize}
+	\item Der User verlängert die Hilfslinie, sodass diese korrekt auf die Schienen abbildet, da die Punkte anhand der Länge der Messlinie gesetzt werden. Die Präzision bei diesem Schritt ist maßgeblich für die Qualität des Labels.
+\end{itemize}
+\noindent
+``decrease length``
+\begin{itemize}
+	\item Der User verringert die Länge der Hilfslinie, damit diese entsprechend exakt auf die Schienen abbildet. 
+\end{itemize}
+\noindent
+``switch focus``
+\begin{itemize}
+	\item Der User wechselt die Fokusseite, da es vorkommen kann, dass die Messlinie durch einen Roll-Winkel nicht komplett gerade ist. Dadurch können gewisse Bereiche nicht komplett markiert werden, wenn die Hilfslinie den Fokus nur auf einer Seite ermöglichen würde. 
+\end{itemize}
+
+\begin{figure}[H]
+  \includegraphics[width=0.7\textwidth]{usecasecali}
+  \caption{Anwendungsfall ``calibrate gauge-line``}
+\end{figure}
+
+\subsubsection{Anwendungsfall ``next image``}
+\label{sec:Anwendungsfall ``next image`` }
+
+In diesem Anwendungsfall wird der Wechsel zu einem neuen Bild beschrieben. Der User hat dabei die Kontrolle darüber, ob Segmentierungsinformationen geschrieben werden sollen oder nicht. Dazu kann der "Sicherungsmodus" ein- und ausgeschaltet werden, damit nicht jedes Mal neue Informationen überschrieben, oder gelöscht werden.
+\\
+
+\noindent
+``load next image``
+\begin{itemize}
+	\item Der User wechselt zum nächsten Bild mit dem Sicherungsmodus aus. Das Programm wechselt zum nächsten Bild und zeigt die beim Start eingelesenen Informationen an.
+\end{itemize}
+\noindent
+``saving modus on``
+\begin{itemize}
+	\item Der User wechselt zum nächsten Bild mit dem Sicherungsmodus an. Das Programm erstellt die Segmentierungsinformationen und speichert diese in separaten Ordnern. Es erstellt eine Pixelmaske, die Ground Truth-Daten, eine Label-Vektor-Datei und eine yaml-Datein in denen die neuen Labelinformationen gespeichert werden. Alte yaml-Datein werden dadurch obsolet und das Programm bevorzugt die neuen yaml-Datein zum einlesen der Bilder.
+\end{itemize}
+\begin{figure}[H]
+  \includegraphics[width=0.7\textwidth]{usecasenext}
+  \caption{Anwendungsfall ``next image``}
+\end{figure}
+
+\subsubsection{Anwendungsfälle ``previous image`` und ``exit``}
+\label{sec:Anwendungsfälle ``previous image`` und ``exit``}
+
+Diese beiden Anwendungsfälle benötigen keine weiteren Erklärungen, da sie jeweils nur eine Funktion darstellen, welche wie beschrieben Funktioniert:
+\\
+
+\noindent
+``previous image``
+
+\begin{itemize}
+	\item Der User wechselt zum vorherigen Bild. Das Programm zeigt die gespeicherten Label zu dem Bild an.
+\end{itemize}
+
+\noindent
+``exit``
+\begin{itemize}
+	\item Der User beendet das Programm. Das Programm schließt sich.
+\end{itemize}
+
+\subsection{Flussdiagramm}
+\label{sec:Flussdiagramm}
+\begin{figure}[H]
+  \includegraphics[width=0.7\textwidth]{flowchart}
+  \caption{Flussdiagramm}
+\end{figure}
+
+Das Fluss- oder Ablaufdiagramm zeigt einen Programmablauf mit den jeweiligen Entscheidungen, welche durch die Eingabe des Benutzers beeinflusst werden.
+Im ersten Schritt wird abgefragt, ob eine Kamera-Matrix gelesen werden konnte. Ist dies nicht der Fall, dann beendet sich das Programm und zeigt einen Fehler an. Sollte eine Kamera-Matrix gelesen worden sein, dann wechselt das Programm in die nächste Abfrage und prüft, ob der User ein oder mehrere Bilder geladen hat. Dementsprechend wird im nächsten Schritt validiert, ob sich zu den jeweiligen Bildern yaml-Datein mit den Punkten auf der Schiene oder den Mittelpunkte im Ordner befinden. Ist dies der Fall, liest das Programm diese Punkte und erstellt daraus die entsprechenden Label und zeigt diese an. Sind keine yaml-Datein vorhanden, erstellt das Programm ein neues Label \textit{Ego Track} und wählt dieses zum Bearbeiten direkt aus. Der User hat danach die Möglichkeit ein neues Label zu erstellen oder das angewählte Label zu verändern. Außerdem kann er neu erstellte Labels anwählen und entsprechend verändern. Die jeweiligen Label werden nach eine Veränderung neu berechnet und angezeigt. Ist der User fertig, kann er auf das nächste Bild wechseln. Ist dabei der Sicherungsmodus aktiv generiert das Programm die jeweiligen Segemtierungsinformationen und wechselt danach auf das nächste Bild. Dieses wird in beiden Fällen angezeigt und auf eine eingelesene yaml-Datein überprüft. Der Vorgang beginnt von vorn. Der User hat zu jedem Zeitpunkt die Möglichkeit das Programm zu beenden.
+
+\section{Implementierungen}
+\label{sec:Implementierungen}
+
+In diesem Abschnitt sollen die eigenen Implementierungen im Kontext der abgeleiteten Anforderungen beschrieben werden.
+\\
+
+\noindent
+\textbf{Filehandling:}
+\\
+
+\noindent
+\begin{table}[h]
+\scriptsize
+\begin{tabular}[h]{c|c|c}
+Anforderung LH & Anfoderung PH & Name \\
+\hline
+ LH 1.1 & PH 2.3 & bool  readJson(vector LabelImg)\\
+LH 2 & PH 3 & bool readJson(vector LabelImg)\\
+LH 2 & PH 3 &void drawPolygons(Mat img, vector labels, bool filled)\\
+LH 2 & PH 3 & void drawPolygon(Mat img,Polygonpoints, bool filled, Scalar color)\\
+LH 2 & PH 3 &void createCatMullRomPolygon(Mat img,LabelImg, bool filled)\\
+LH 2 & PH 3 &void DrawCatmullRomSegment(...)\\
+\end{tabular}
+\caption{Filehandling Umsetzung}
+\end{table}
+\\
+\\
+
+\noindent
+\textbf{PH 2.3 Das System muss Schienenpunktinformationen einlesen können:}
+\\
+
+\noindent
+Um diese Funktion zu realiseren wurden folgende Funktionen implementiert:
+\begin{itemize}
+	\item bool readJson(vector LabelImg)
+\end{itemize}
+
+\noindent
+\\
+\noindent
+\underline{readJson(vector LabelImg):}
+\\
+
+\noindent
+Die Funktion zum Einlesen der yaml-Datein für die Punkte auf den Schienen bekommt den Vektor mit den jeweiligen eingelesenen \textit{LabelImages} übergeben. Es wurde eine Abfrage beim Start des Programms implementiert, welche die Auswertung einer Boolean beinhaltet, ob eine yaml-Datei mit Schienenmittelpunkten gelesen wurde. Sollte dies nicht der Fall sein, dann wird eine Mittelpunkt-Dateien eingelesen damit garantiert werden kann, dass die alten existenten Mittelpunkt-Dateien genutzt werden können. Da die Funktion zum Einlesen vorhanden war, wird hier nur auf die neue Funktion zum Einlesen der Schienenpunkte eingegangen. Dazu wurde die OpenCV Filestorage Klasse verwendet , welche zunächst abfragt, ob die Filestorage geöffnet wurde. Danach wurden Filenodes gesetzt, welche nach den jeweiligen Stichworten \textit{Ego Track}, \textit{left neighbor} und \textit{right neighbor} in der yaml-Datei als Anker haben, um darauf zugreifen zu können. Die yaml-Dateien haben dabei folgendes Format:
+\begin{figure}[H]
+\centering
+  \includegraphics[width=0.4\textwidth]{yaml}
+  \caption{Aufbau yaml-Datei}
+\end{figure}
+\noindent
+Es können dabei beliebig viele linke und rechte Nachbarn in der Dateien vorhanden sein, jedoch nur ein \textit{Ego Track}. Über diese Filenodes wird nun mit einer For-Schleife iteriert und ein neuer Filenode gesetzt, welcher in der nächsten Ebene der yaml-Datei auf \textit{Ego Track}, \textit{leftrail} und \textit{rightrail} zugreift. Da es sich bei diesem Filenode um einen normalen Vektor mit den entsprechenden Punkten handelt, kann auch über diesen problemlos iteriert werden. In dieser Schleife wird ein neuer Punkt von OpenCV-Datentyp Point erstellt. Da die Punkte in der yaml-Datei hintereinander mit x- und y-Korrdinate gespeichert sind, erhöht sich der Schleifeniterator um +=2. Diese Punkte werden dann auf den entsprechenden Vektor des Structs \textit{label} gespeichert.
+\\
+
+\noindent
+\textbf {PH 3 Das System muss aus eingelesenen Informationen Schienenmarkierungen generieren:}
+\\
+
+\noindent
+Um diese Funktion zu realiseren wurden folgende Funktionen implementiert:
+\begin{itemize}
+	\item bool readJson(vector LabelImg)
+	\item void drawPolygons(Mat img, vector labels, bool filled)
+	\item void drawPolygon(Mat img, Polygonpoints, bool filled, Scalar color)
+	\item void createCatMullRomPolygon(Mat img, LabelImg, bool filled)
+	\item void DrawCatmullRomSegment(Mat image, LabelImg , Point2f p0, Point2f p1, Point2f p2, Point2f p3 , Scalar colors, float steps)
+\end{itemize}
+
+\noindent
+Um aus den eingelesenen Punkten eine Schienenmarkierung generieren zu können, wird in der Funktion readJson(vector LabelImg) vor dem Einlesen der jeweiligen Schiene ein neues Struct \textit{label} mit dem Namen der Schiene erstellt. Dieses Struct enthält folgende Attribute:
+\lstset{language=c++}
+\begin{lstlisting}[frame=htrbl, caption={Struct Label}, label={lst:result2}]
+struct label{
+    int id;
+    int categoryId;
+    std::string labelName;
+    vector<Point> trackbedPolygon;
+    vector<Point> rightRailPolygon;
+    vector<Point> leftRailPolygon;
+    vector<Point> rCatMullPoint;
+    vector<Point> lCatMullPoint;
+    vector<Point> centerPoint;
+
+    Scalar color;
+    Scalar trackbedColor;
+
+    label(): id(0),categoryId(0), labelName("label") {};
+    label(int x,int y, string c, Scalar d, Scalar e) : id(x),
+    categoryId(y), labelName(c), color(d), trackbedColor(e) {};
+};
+\end{lstlisting}
+\noindent
+Die Schienenmittelpunkte, die dazugehörige Farbe und Kategorie-Id werden mit dem einlesen der Punkte in dem Struct gespeichert. Die Label-Structs werden in dem neu erstellen Vector labels des LabelImage gespeichert. 
+
+\lstset{language=c++}
+\begin{lstlisting}[frame=htrbl, caption={create Labell}, label={lst:result2}]
+FileNode centerpoint = ego[j]["centerpoint"];
+ lbl = label(id, 1, "ego track", CENTER_COLOR, CENTERTRACKBED_COLOR);
+std::cout << "created new Labelfrom yaml: " << lbl.labelName
+ << "id: " << lbl.id <<std::endl;
+\end{lstlisting}
+\noindent
+\underline{createCatMullRomPolygon(Mat img, LabelImg, float steps):}
+\\
+
+\noindent
+Diese Punkte können nun dazu genutzt werden, mit der Funktion createCatMullRomPolygon(Mat img, LabelImg, float steps), welche das momentane Bild, das Struct LabelImg und eine Anzahl an Interpolations-schritten zwischen zwei Punkten übergeben bekommt, die Polygon-Label zu generieren. Dazu wird mit einer For-Schleife über den Vector Labels vom LabelImage iteriert. Dieser Vector beinhaltet die beim Einlesen erstellten label-Structs. Mit einer weiteren For-Schleife bekommt man den Zugriff auf die gespeicherten Schienenmittelpunkte, welche vorab sortiert werden, damit ein dynamisches Einfügen von Punkten möglich gemacht werden kann.
+\\
+
+\noindent
+\underline{DrawCatmullRomSegment(...):}
+\\
+
+\noindent
+ Mit einer For-Schleife wird nun über die entsprechenden Schienenmittelpunkt-Vektoren, iteriert und die Funktion DrawCatmullRomSegment(...) darauf angewendet. Diese Funktion bekommt das auf dem zu zeichnende Bild, das Struct LabelImage und vier Punkte aus dem Vektor zwischen denen Interpoliert werden soll, mit der Anzahl der jeweiligen Interpolationsschritte übergeben. Diese Funktion berechnet dann ein Catmull-Rom Spline (Beschrieben in Grundlagen) durch die vier Punkte, mit einem Abstand der Interpolationspunkte entsprechend der Anzahl an Steps, welche übergeben wurden. Diese Interpolationspunkte werden dann von Pixel in Weltkoordinaten umgerechnet und auf der x-Achse exakt um (67/2)mm nach links und nach rechts verschoben. Die 67mm repräsentieren in diesem Fall die im Kapitel Grundlagen beschriebene Breite des Schienenkopfes. Als Ergebnis bilden nun die linken und rechten Interpolationspunkte zwischen den vier Catmull-Rom Punkten genau auf den äußeren Rand einer Schiene ab. Abschließend werden diese in Pixelkoordinaten zurückgerechnet und auf Hilfsvektoren des Labelimages gespeichert, sollten diese sich im Bild befinden (Es kann sein, dass Punkte außerhalb des Bildbereiches markiert werden, da die Messlinie in vielen Fällen nicht gerade ist und deshalb teilweise aus dem Bild rausragt). 
+Diese Hilfsvektoren repräsentieren nun den linken und rechten äußeren Rand einer Schiene. Um daraus ein Polygon zu erstellen, müssen diese Punkte nun in richtiger Reihenfolge in einem Vektor gespeichert werden. Da das gewählte Drittanbieter-Tool makesense.ai das COCO Json-Format verwendet, müssen die Punkte der Reihenfolge nach wie sie gezeichnet werden sollen, auch gespeichert werden. Dazu wird der Vektor mit den Punkten des rechten Randes invertiert und mit dem Vektor des linken Randes konkateniert und in dem entsprechenden Polygon-Vektor des Labels gespeichert.
+\begin{figure}[H]
+\centering
+  \includegraphics[width=0.4\textwidth]{poly}
+  \caption{Reinfolge der Polygonpunkte}
+\end{figure}
+
+
+\noindent
+\underline{drawPolygons(Mat img, vector labels, bool filled):}
+\\
+
+\noindent
+Damit die Label auf dem Bild gezeichnet werden können, wurde die Funktion drawPolygons(Mat img, vector labels, bool filled) implementiert. Diese Funktion bekommt das Bild  auf dem gezeichnet werden soll, den Vector labels des Structs LabelImage und eine Boolean übergeben, ob das Polygon gefüllt werden soll oder nicht. In der Funktion wird über die einzelnen Polygon-Vektoren iteriert, welche durch die Funktion createCatmullRomPolygon() generiert wurden. Für jeden dieser Vektoren wird die Funktion drawPolygon(Mat img, vector labels, bool filled, Scalar color) aufgerufen. Diese bekommt das aktuelle Bild, den Vektor der Polygonpunkte, eine Boolean ob das Polygon befüllt werden soll und eine Farbe für das Label übergeben. In der Funktion werden Polygonpunkte auf einem Vektor von Vektoren gespeichert und eine Abfrage ausgeführt, ob das Polygon gefüllt werden soll, wenn nicht, dann wird die OpenCV Funktion polylines() aufgerufen, welche die Polygonpunkte miteinander verbindet. Soll das Polygon gefüllt werden, wird die OpenCV-Funktion fillpoly() aufgerufen, welche den Vektor von Vektoren der Polygonpunkte übergeben bekommt. 
+\\
+
+\noindent
+\textbf{Punkte speichern und löschen:}
+\\
+
+\noindent
+\begin{table}[H]
+\scriptsize
+\begin{tabular}{c|c|c}
+Anforderung LH & Anfoderung PH & Name \\
+\hline
+LH 3& PH 4 & void createNewLabel(LabelImg)\\
+LH 3 & PH 4.1 & void createNewLabel(LabelImg)\\
+LH 3 & PH 5 &label selectLabel(LabelImg, int lblIdx)\\
+LH 3.1 & PH 5.1 & void saveCatMullPoint(selecedtLabel, LabelImg, img)\\
+LH 3.1 & PH 5.1 & void removeClosestCatMullPoint(selectedLabel)\\
+LH 3.1 & PH 5.1 & void deleteLabelFromActiveLabels(LabelImg)\\
+LH 3.1 & PH 5.2 & void drawGaugeLine(img, LabelImg, label)\\
+\end{tabular}
+\caption{Umsetzung Speichern und Löschen}
+\end{table}
+
+
+\noindent
+\textbf {PH 4   Das System muss beliebig viele Schienenmarkierungen generieren können:}
+\\
+
+\noindent
+\underline{createNewLabel(LabelImg lblImg):}
+\\
+
+\noindent
+Um beliebig viele Nachbarn erstellen zu können, wurde die Funktion createNewLabel(LabelImage) implementiert. Diese Funktion vom Typ void bekommt ein LabelImg übergeben. Zuerst wird abgefragt, ob der Vektor labels des LabelImage-Structs leer ist. Sollte dies der Fall sein, dann wird ein neues Label für den Ego Track generiert. Ist der Vektor nicht leer überprüft diese Funktion den momentan Mauspunkt auf dem Bildschirm. Sollte dieser sich links neben dem Ego Track befinden, dann wird ein Label linker Nachbar erstellt und vice versa ein rechter Nachbar. Diese Label werden abschließend auf dem labels-Vektor des Labelimg gespeichert. Damit wurde auch ``PH 4.1 Das System muss zwischen rechtem und linkem Nachbar unterscheiden können`` erfüllt.
+\\
+
+\noindent
+\textbf {PH 5 Das System muss zwischen den jeweiligen Schienenmarkierungen wechseln können}
+\\
+
+\noindent
+\underline{selectLabel(LabelImg lblImg, int lblIdx)):}
+\\
+
+\noindent
+Damit der Benutzer die Möglichkeit hat auszuwählen, welche Schiene er markieren möchte, wurde die Funktion selectLabel(LabelImg lblImg, int lblIdx)) implemlementiert. Die Funktion vom Typ label bekommt das LabelImage und die globale Variable lblIdx, welches den momentanen Index des ausgewählten Labels darstellt, übergeben. Dieser Index wird über den Input der Zahlen 
+1-9 vom User gesteuert. Zuerst findet eine Abfrage statt, ob der Vektor labels vom LabelImage leer ist. Ist dies nicht der Fall, dann wird überprüft, ob der Index kleiner als die momentan Größe des Vektors labels ist. Ist dies der Fall, den gibt die Funktion das label mit dem jeweiligen Index wieder. Andernfalls wird ausgegeben, dass dieses Label nicht existiert. Ist der Vektor labels leer, dann wird ein neues label erstellt und dieses zurückgegeben.
+\\
+
+\noindent
+\textbf {PH 5.1 Das System muss die angewählten Schienenmarkierungen verändern können:}
+\\
+
+\noindent
+\underline{saveCatMullPoint(label lbl, LabelImg lblImg, Mat img):}
+\\
+
+\noindent
+Diese Funktion soll die Punkte auf der Mitte der linken und rechten Schiene speichern. Dazu bekommt sie das aktuell ausgewählte Label, das LabelImage und das Bild übergeben, auf dem momentan gezeichnet wird. Zunächst wird abgefragt, ob der User das Mittelpunkt-Labeling oder das Seiten-fokussierte-Labeling nutzt. Danach wird entsprechend beim Mittelpunkt-Labeling der jeweilige Mittelpunkt in Weltkoordinaten umgerechnet und um (1502/2)mm nach links und rechts auf der x-Achse verschoben. 1502mm entstehen daraus, dass man die Spurweite von 1435 mit der Schienenbreite addiert. (Mittelpunkt Schiene = 67mm/2, für beide Schienen (67mm/2)*2). Diese Punkte werden wieder in Pixelkoordinaten umgerechnet und in dem entsprechenden Vektor der jeweiligen Schiene gespeichert. Ist das Seiten-fokussierte-Labeling aktiv, dann wird zunächst die momentane Mausposition als linker Punkt auf der Schiene gesehen und von Pixel- in Weltkoordinaten umgewandelt. Danach wird dieser um 1502mm auf der x-Achse verschoben, um auf die andere Schiene abzubilden. Ist die globale Variable switch sides wahr, dann wird der rechte Punkt fokussiert. Dieses Vorgehen ist notwendig, da die Messlinie oft nicht komplett gerade ist (Roll-Winkel) und deshalb können einseitig nicht alle Punkte gesetzt werden. Sollte die ersten Punkte für ein neues Schienenlabel gesetzt werden, dann wird der Selbe Punkt um 1 auf der y-Achse verschoben wiederholt gespeichert, damit nur zwei weitere Punkte für den Catmull-Rom Spline gesetzt werden müssen, bis dieser gezeichnet wird. 
+\\
+
+\noindent
+\underline{removeClosestCatMullPoint(label lbl)):}
+
+
+\noindent
+Diese Funktion bekommt das ausgewählte Label übergeben. Zunächst werden Pointer auf den Adressspeicher der Vektoren allokiert, aus denen entsprechende Punkte gelöscht werden soll. Wenn der jeweilige Vektor nicht leer ist, dann wird geprüft welcher Punkte auf der linken oder rechten Schiene dem Mauszeiger am nächsten ist. Danach wird der Index erfasst und sollte der Mauszeiger weniger als 100 Pixel vom nächsten Punkt im Vektor sein, dann wird der Addesspeicher freigegeben. Anhand des Indexes wird danach der Punkt auf der anderen Seite gelöscht und am Ende der Mittelpunkt.
+\\
+
+\noindent
+\underline{void deleteLabelFromActiveLabels(LabelImg lblImg):}
+\\
+
+\noindent
+Der Funktion wird das LabelImage übergeben. Zunächst wird über den globalen Vektor activeRails iteriert, welcher die aktiven Labels als Tupel mit der jeweiligen id hält. Wenn der Mauszeiger weniger als 20 Pixel von der x- und y-Koordinate des oberen Punktes der Linie, welche für das Label mit der jeweiligen Farbe steht, entfernt ist, dann wird das Label mit der korrespondierenden id aus dem Vektor labels des LabelImages gelöscht.
+\\
+
+\noindent
+\textbf {PH 5.2 Das System muss die Länge der Messlinie anpassen können:}
+\\
+
+\noindent
+Um garantieren zu können, dass die Genauigkeit auch unabhängig von der Kamera-Matrix gut ist, wurde eine Funktion implementiert, welche die jeweiligen Maße der Messlinie veränder kann, sodass diese immer korrekt Punkte auf der Mitte des Schienenkopfes setzen kann. Die Funktion drawGaugeLine(img, LabelImg, label) bekommt das Bild auf dem zu Zeichnen ist, das aktuelle LabelImage und das Label, welche aktuell über selectLabel() angewählt ist. Auch hier weden wird wieder der Mausmittelpunkt zum momentanen Zeitpunkt ausgewertet und in Weltkoordinaten umgerechnet. Dieser Punkt wird dann um 1502mm nach rechts verschoeben, sodass er genau auf die Mitte des gegenüberliegenden Schienenkopfes abbildet. Sollte die Kamera-Matrix unzuverlässig sein, dann kann der User über die globale Integer-Variable gaugeScale die Messlinie händisch verlängern, oder verkürzen. Diese Variable wird beim Anwählen einer anderen Schiene wieder auf Null gesetzt.
+\\
+
+\noindent
+\textbf{Output generieren:}
+\\
+
+\noindent
+\begin{table}[h]
+\scriptsize
+\begin{tabular}[h]{c|c|c}
+Anforderung LH & Anfoderung PH & Name \\
+\hline
+ LH 4& PH 6 & bool readJson(vector LabelImage)\\
+LH 5 & PH 7 & void writeJson(LabelImg)\\
+LH 6 & PH 8.1 & void createPixelMask(LabelImg , Label)\\
+LH 6 & PH 8.2 & void createGroundTruth(LabelImg, gTruth)\\
+LH 6 & PH 8.3 & void writeJsonPolygon(LabelImg, img)\\
+\end{tabular}
+\caption{Umsezung Output generierenr}
+\end{table}
+\\
+\\
+
+\noindent
+\textbf{PH 6  Das System muss prüfen, ob Segmentierungsinformationen vorhanden sind:}
+\\
+
+\noindent
+Um die Abfrage nach vorhandenen Segmentierungsinformationen gewährleisten zu können, wurde Funktion readJson(vector LabelImage) ein Rückgabewert vom Typ Boolean gegeben, welcher True ist, wenn Segmentierungsinformationen vorhanden sind und gelesen werden können.
+\\
+
+\noindent
+\textbf {PH 7 Das System muss vorhandene Markierungen von Schienen- und Mittelpunkten wiedereinlesbar in einer Datei speichern:}
+\\
+
+\noindent
+\underline{writeJson(LabelImg lblImg):}
+\\
+
+\noindent
+Diese Funktion schreibt die Vektordaten der Catmull-Rom-Punkte der Schienen und Mittelpunkte in eine yaml-Datei, welche, wie in PH 3 beschrieben wurde, wieder eingelesen werden kann. Es wird die nlohmann-Bibliothek verwendet, welche den Datentyp json bereitstellt. Damit können Vektoren mit diesem Datentyp erstellt werden, welche das entsprechende Format berücksichtigen. Zunächst prüft die Funktion, ob ein Ordner mit dem Namen yaml-files vorhanden ist. Wenn nicht, dann wird dieser erstellt. Danach wird über die Vektoren der Labels des LabelImages iteriert und einzelne Punkte im json Format auf den Vektoren gespeichert.  Es wird für jede der Schienen(linker Nachbar, rechter Nachbar und Ego Track) ein weiteres JSON-Objekt erstellt, welches die jeweiligen JSON-Vektoren der Schienen zugewiesen bekommt. So kann iterativ eine Struktur erstellt werden. Es wird jede äußere Klammer einer JSON-Datein als ein JSON-Objekt gesehen, welches weitere Vektoren des JSON-Typen beinhalten kann. 
+\\
+
+\noindent
+\textbf {PH 8.1  Das System muss eine Pixelmaske generieren können:}
+\\
+
+\noindent
+\underline{ void createPixelMask(LabelImg , Label):}
+\\
+
+\noindent
+Diese Funktion ist simpel gehalten und fragt lediglich ab, ob der Ordner Pixelmask im Verzeichnis vorhanden ist und wenn nicht, dann wird dieser erstellt. Danach wird das Label, welches vom Typ Mat ist und vom Programm neben dem Bild erstellt wurde, um darauf die Markierungen zu zeichnen, einfach unter dem jeweiligen Namen des Bildes in dem Ordner gespeichert. 
+\\
+
+\noindent
+\textbf {PH 8.2 Das System muss aus der Pixelmaske Ground Truth Daten erstellen können:}
+\\
+
+\noindent
+\underline{void createGroundTruth(LabelImg, gTruth):}
+\\
+
+\noindent
+Dieser Funktion wird das Label (hier gTruth genant) übergeben und das jeweilige LabelImage. Auch diese Funktion überprüft, ob sich ein Ordner mit dem Namen gTruth im Verzeichnis befindet und wenn nicht, dann wird dieser erstellt. Danach wird das übergebene Label mit den Markierungen in grayscale umgewandelt und damit in das uint8-Format, wobei jedes Pixel nur einen anstatt 3 Byte Informationen trägt. Die jeweiligen Farben der Label(Schiene und Schienenbett) wurden in grayscale analysiert und festgehalten. Danach wird über die Reihen und Zeilen des grayscale-Bildes iteriert und abgefragt, ob ein Pixel den jeweiligen Integer für die korrespondierende Farbe enthält. Sollte dies der Fall sein, dann wird ein neuer Integer in das Pixel geschrieben, welcher in diesem Fall für die Klasse steht und somit dem neuronalen Netzwerk verständlich wird. Für die neuen Klasseninteger würde der Railsem 19-Datensatz erweitert:
+\begin{itemize}
+	\item Linker Nachbar Klasseninteger: 20
+	\item Mittelschiene Klasseninteger: 21
+	\item Rechter Nachbar Klasseninteger: 22
+\end{itemize}
+
+\noindent
+textbf {PH 8.3 Das System muss eine Vektorpolygon-Datei zur Verwendung bei Drittanbietern generieren können:}
+\\
+
+\noindent
+\underline{writeJsonPolygon(LabelImg lblImg, Mat image):}
+\\
+
+\noindent
+Diese Funktion wurde auf der selben Grundidee, wie in PH 7 beschrieben, aufgebaut. Es werden JSON-Objekte benutzt und das jeweilige Format in eine Dateien speichern zu können, nur dass in diesem Fall die Polygonpunkte der Labels in den jeweiligen Dateien gespeichert werden. Hierzu wurde das COCO Dataset Format gewählt, um bei dem Drittanbieter makesense.ai die Label importieren zu können. Das COCO Dataset Format zeigt sich als besonders einfach und schnell zu erweitern. Der Grunbaufbau gestaltet sich folgendermaßen:
+\begin{lstlisting}  
+{
+    "info": {...},
+    "licenses": [...],
+    "images": [...],
+    "categories": [...], 
+    "annotations": [...],
+}
+\end{lstlisting}
+Unter Info werden die grundlegenden high-level Informationen über das jeweilige Dataset definiert. Darunter fallen der Name, das Datum und andere beschreibende Parameter. Licences beinhaltet eine Liste von Bilder-Lizenzen, welche eventuell verwendet wurden. Unter Images wird eine Liste mit allen Bildern angelegt, welche verwendet wurden, um daraus Label zu erstellen. Dabei wird jedes Bild mit dem Namen, der Größe, der id und anderen Informationen beschrieben. Categories beinhaltet eine Liste der jeweiligen Label-Kategorien, wobei es sich in unserem Fall lediglich um Schiene und Schienenbett handelt. Interessant wird es bei den annotations. Hier werden die wichtigen Informationen für die jeweilige Markierung im Bild gespeichert. Dabei handelt es sich um eine Liste der jeweiligen individuellen Markierungen des Datasets, wobei hintereinander x und y-Koordinaten gespeichert werden. Jede dieser Markierungen hält zu dem Informationen über die korrespondierende Kategorie, dem dazugehörigen Bild, eine eingene id und eine Abfrage, ob die Markierungen sich überdecken. Beispiel:
+\begin{lstlisting}  
+"annotations": [
+{
+   "segmentation": [[510.66,423.01,511.72,420.03,...,510.45,423.01]],
+    "area": 702.1057499999998,
+    "iscrowd": 0,
+    "image_id": 289343,
+    "bbox": [473.07,395.93,38.65,28.67],
+    "category_id": 18,
+    "id": 1768
+},]
+\end{lstlisting}

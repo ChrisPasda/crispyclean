@@ -1,0 +1,765 @@
+\documentclass[11pt]{scrartcl}
+ 
+ \usepackage{graphicx}
+\usepackage{scrlayer-scrpage}
+\usepackage{listings }
+\usepackage{hyperref}
+\usepackage{listingsutf8}
+\pagestyle{scrheadings}
+\clearscrheadfoot
+\ifoot[]{\author}
+\ofoot[]{\pagemark} 
+ \title{Optimierung von Trainingsdaten für semantische Segmentierung}
+\author{Christopher Pasda}
+\usepackage{float}
+\restylefloat{figure}
+
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\newpage
+
+\section{Einleitung}
+\label{sec:Einleitung}
+
+Für das Forschungsprojekt von Herr Prof. Dr.-Ing. Carsten Thomas, in Zusammenarbeit mit der Firma BOSCH, zum Thema Schienenerkennung für automatisiertes Fahren unter der Verwendung eines neuronalen Netzwerkes, soll der Prozess der Erstellung von Trainingsdaten optimiert werden, damit auch eigene Trainingsdaten erstellt werden können. Dies ist notwendig, da existierende Datensätze nicht für kommerzielle Zwecke verwendet werden können. Ziel der Arbeit ist die Entwicklung eines Prototyps, welcher den Prozess des Labelns\footnote{Labeln beschreibt den Prozess, bei dem jeder Klasse eines Bildes verschiedene Farbcodes zugeordnet werden, um sie so unterscheiden zu können.} eines Bildes optimiert.
+Dazu werden im ersten Teil verschiedene Tools analysiert und dazu eine systematische
+Übersicht der notwendigen Requirements für die Entwicklung eines eigenen Programms erstellt. Darauf aufbauend wird das "Annotation Tool" von Herrn Mario Hoffmann analysiert und weitere Requirements aus Use Cases abgeleitet. Im zweiten Teil wird das Programm, basierend auf einer Idee von Herr Thomas, vorgestellt und diskutiert. Abschließend folgt eine Qualitätskontrolle und das Fazit der Arbeit.
+
+WAS IST SEMANTISCHE GEMENTIERUNG?!?!
+\newpage
+\section{Projekt SE Perception}
+\label{sec:Projekt SE Perception}
+
+MEhr Infos zu Bosch und dem neuen Schienending
+
+
+Die vorliegende Arbeit wurde im Zusammenhang des Projektes SE Perception zwischen der Hochschule für Technik und Wirtschaft Berlin und der Firma BOSCH realisiert. In diesem Projekt wird ein Convolutional Neural Network dazu verwendet automatisch Schienen erkennen zu können. Um ein solches Netzwerk effektiv nutzen zu können, muss dieses vorab trainiert werden. Dazu werden Beispielbilder, welche eine Abbildung der jeweiligen Situation die erkannt werden soll darstellen, entsprechend markiert und daraus Ground Truth Daten\footnote{Ground Truth eine gebräuchliche Terminologie, die in verschiedenen Bereichen häufig verwendet wird, um sich grundsätzlich auf jede Art von Information zu beziehen, die durch direkte Beobachtung bereitgestellt wird} erstellt. Dies sind uint8 Bilder, welche den jeweiligen Klasseninteger in einem Pixel gespeichert haben. Daraus entsteht ein Grayscale-Bild, welches ein Neuronales Netzwerk verstehen kann. Darauf wirdi m späteren Verlauf näher eingegangen.
+
+\noindent 
+Um solche Ground Truth Daten erstellen zu können, muss ein Bild vorab gelabelt werden.  Dazu werden interessante Bereiche (ROI = region of interest) pixelweise in der jeweiligen Klassenfarbe markiert.
+
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{label}
+  \caption{Beispiel Pixelmaske}
+\end{figure}
+\newpage
+\noindent 
+Danach werden diese Bilder in grayscale umgewandelt und die markierten Pixel mit der jeweiligen Klassen-ID befüllt. So entsteht aus einem RGB mit 3 Bytes in jedem Pixel (rot, grün, blau) ein Bild mit nur einem Byte pro Pixel.
+
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{gtruth}
+  \caption{Beispiel Ground Truth}
+\end{figure}
+\noindent 
+Mit diesen Trainingdsaten kann nun ein Netzwerk trainiert werden.
+Im Ergebnis kann durch eine "Heatmap" gezeigt werden, mit welcher Wahrscheinlichkeit das Neuronale Netzwerk die Schienen erkennt. Dabei wird durch ein ROS-Knoten eine Daten-Verbindung zwischen einem Video und dem Neuronalen Netzwerk geknüpft, wodurch die Algorithmen anhand des Bild-Inputs die Schienen erkennen können.
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{netzwerk}
+  \caption{Wahrscheinlich der Erkennung von Schienen durch das Netzwerk}
+\end{figure}
+\noindent 
+Die Güte der Erkennung hängt dabei direkt von der Anzahl und Qualität der Trainingsdaten ab. Der momentan verwendete Datensatz "Railsem19" umfasst 8500 Bilder und äquivalent viele Labels. Davon werden circa 70\% für das Training und 30\% der Bilder für das Testen des Netzwerkes benötigt. Es wird deutlich, dass eine große Anzahl an Bildern für ein Training gebraucht wird. 
+
+
+
+\subsection{Problemstellung}
+\label{sec:Problemstellung}
+
+Dadurch, dass der "Railsem19" Datensatz nicht für kommerzielle Zwecke genutzt werden darf und der allgemeine Aufwand ein Bild händisch zu labeln sehr groß ist, entstand die Notwendigkeit nach einem Programm, welches den Prozess des Labelns weitestgehend automatisiert. Dazu wurden vorab gängige Labeltools auf etwaige unterstützende Funktionen und allgemeine Funktionalitäten untersucht.
+
+Evemtuell Bilder labeln und zeit messen ?!
+
+Projektive Ebene beschreiben doch wo?
+
+
+IDEE VON HERRN THOMAS aufzeigen
+https://www.uniserv.com/unternehmen/blog/detail/article/ground-truth-ohne-datenqualitaet-kein-machine-learning/
+
+\newpage
+
+\section{Analyse gängiger Labeltools}
+\label{sec:Analyse gängiger Labeltools}
+In dieser Analyse werden vier gängige Labeltools auf ihre Funktionalitäten und Features in einer Pro- und Contra-Liste analysiert, was sowohl der Ableitung von Requirements, als auch der Übersicht über verschiedene automatisierende Features dient. Am Ende dieses Kapitels wird ein Fazit gezogen, welches dieser Programme sich für eine Erweiterung eigenen würde, oder ob ein eigener Ansatz gewählt wird.
+
+\subsection{CVAT (Computer Vision Annotation Tool)}
+\label{sec:CVAT (Computer Vision Annotation Tool)}
+
+NOCH LIZENENZ NENEN
+Bei CVAT handelt es sich um einWebapp von Intel, welche am 19.06.2018 für den PC veröffentlich wurde. Besonders daran ist, dass neben dem Label-Tool auch ein Projektplaner verfügbar ist, bei dem verschiedene Jobs verteilt werden können. So lassen sich Label-Projekte sehr gut überblicken und strukturieren. 
+\\
+
+\textbf{Pro:} 
+\begin{itemize}
+	\item einfach zu installieren und skalieren - läuft in einer webapp (auf einem Docker)
+	\item gute Zusammenarbeit in Teams möglich durch Tasks
+	\item gute Übersicht über Labels
+	\item Werkzeuge funktionieren sehr gut und ohne Probleme 
+	\item verschiedenste Outputmöglichkeiten 
+\end{itemize}
+\textbf{Contra:} 
+\begin{itemize}
+	\item einen Task bereitzustellen erfordert Probieren
+	\item nicht sehr intuitiv am Anfang da sehr umfangreich
+	\item WebApp läuft nur auf Chrome
+	\item AI-Tool nicht zu gebrauchen
+\end{itemize}
+
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{CVAT}
+  \caption{Gelabeltes Bild in CVAT, Aufwand: ca. 20 Minuten}
+\end{figure}
+
+\noindent
+CVAT bietet dem User ein Reihe an AI-Tools, welche unter dem Strich für das Labeln von Schienen leider nicht zu gebrauchen sind. Es gibt sogenannte "Interactors", welche eine äußere Umrandung von Objekten semiautomatisch erkennen sollen. Dabei werden vier Punkte gesetzt und Objekte gelabelt, welche sich in diesem Viereck befinden. Leider funktioniert diese Erkennung bei Schienen schlecht, da das Bild rund um die Schienen zu viele verschiedene Strukturen zeigt. Da dies häufig bei Schienen auftritt, kann dies Verwendung von "Interactors" ausgeschlossen werden. 
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{Interactor}
+  \caption{Interactor in CVAT Beispiel}
+\end{figure}
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{Interactor CVAT}
+  \caption{Interactor in CVAT Schiene }
+\end{figure}
+
+\noindent
+Eine weitere Möglichkeit stellen "Detectors" dar. Das sind "supported DL models", welche automatisch aus einem Frame generiert werden. Diese eigenen sich aber nur für die vorgefertigten Label-Kategorien, in denen sich leider bisweilen keine Schienen finden lassen. Die letzte Kategorier der AI-Tool stellen die "OpenCV tools" dar. Darunter findet sich eine "intelligent Scissor", welche ähnlich funktioniert wie die "Interactors". Dabei werden rund um das Objekt Punkte gesetzt und das Tool zeichnet die Umrandung automatisch. Die Erkennung des Randes funktioniert hier deutlich besser, jedoch müssen immernoch viele Punkte gesetzt werden, da der Rand nur in einer begrenzten Entfernung vom letzten Punkt erkannt werden kann. Demnach bietet diese Unterstützung kaum Zeitersparnis, da fast gleich viele Punkte, wie beim normalen Labeln gesetzt werden müssen und es trotzdem Schwächen bei der Erkennung der Umrandung gibt.
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{scissors}
+  \caption{intelligent Scissors in CVAT}
+\end{figure}
+\noindent
+Zusammenfassend ist zu sagen, dass CVAT ein performantes gutes Programm darstellt, welches jedoch keine sinnvollen AI-Tools für das Labeln von Schienen mitbringt.
+\\
+
+\noindent 
+Github: \url{https://github.com/openvinotoolkit/cvat/} 
+
+\subsection{Labelme}
+\label{sec:Labelme}
+
+Labelme ist ein 2018 veröffentliches grafisches open-source Annotation-Tool von Kentaro Wada, welches in Python geschrieben wurde. Das Programm setzt eine Anaconda-Installation auf dem Computer voraus und kann über die Shell bedient werden. Das bersondere daran ist, dass sich das Programm auch über Python-Code steuern lässt, sodass einfach Scripts geschrieben werden können, um Trainingsdaten zu erzeugen und zu konvertieren. Es bietet eine vielzahl an verschiedenen Output-Formaten für die Ground Truth-Daten an.
+\\
+
+\textbf{Pro:} 
+\begin{itemize}
+	\item github open source auf Python basierend
+	\item Trainings Daten können direkt verschieden konvertiert werden
+	\item einfaches Interface mit gut strukturierten Inhalten
+	\item viele verschiedene Formate für Labels (z.B: COCO JSON, Pascal VOC XML, YOLO Keras TXT)
+	\item Funktionen können über Prompt aufgerufen werden (programmierbarkeit)
+\end{itemize}
+\textbf{Contra:} 
+\begin{itemize}
+	\item Installation etwas umständlich
+	\item Bildbearbeitungsmöglichkeiten sehr langsam
+	\item Anaconda-Installation wird benötigt
+	\item keine AI-Tools zur Unterstützung
+\end{itemize}
+\noindent
+Auf den ersten Blick scheint Labelme ein Programm zu sein, welches sich für die Zwecke des unterstützten Labelns erweitern lassen könnte, jeodch biete es so keine Vorteile gegenüber dem händischen Labeln mit CVAT. Der Prozess des Labelns eines Bildes ist für einen ungeübten Benutzer auch hier recht zeitaufwändig. 
+Der Aufwand belief sich auf ca. 15 Minuten pro Bild, wobei es stark davon abhängt, wie viele Schienen gelabelt werden müssen. 
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{labelme}
+  \caption{Gelabeltes Bild mit Labelme}
+\end{figure}
+
+\noindent 
+Github: \url{https://github.com/wkentaro/labelme} 
+\newpage
+\subsection{Makesense.ai}
+\label{sec:Makesense.ai}
+
+Maksesense.ai ist eine WebApp, welche unter \url{https://makesense.ai}  erreichbar ist oder über die Shell installiert werden kann. Es wurde von Piotr Skalski geschrieben und untersteht der "GNU General Public License". Das Tool bietet verschiedene AI-Funktionalitäten und Automatisierungen von repetitiven Aufgaben. Dabei verspricht es, dass es mit dem Single Shot MultiBox Detector, welcher ein "single deep neural network" darstellt und mit dem COCO Datensatz\footnote{Common Objects in Context (COCO)} trainiert wurde, Label im Bild zu erkennen und vorzuschlagen. 
+\\
+
+\textbf{Pro:} 
+\begin{itemize}
+	\item WebApp
+	\item gutes übersichtliches Interface
+	\item für sehr einfaches Labeling (rectangles) gut zu gebrauchen
+	\item gute Übersicht über die Labels
+\end{itemize}
+\textbf{Contra:} 
+\begin{itemize}
+	\item schlechte Bedienweise
+	\item Bewegung beim Setzen der Polygone sehr hakelig
+	\item Labels können nur in VGG Json exportiert werden
+	\item keine direkte Erstellung von Trainingsdaten
+\end{itemize}
+
+\noindent
+Auch hier können die AI-Tools für die genannten Zwecke nicht überzeugen. Zwar funktioniert die Erkennung mit dem COCO SSD, jedoch nur für Bilder, welche den trainierten Kategorien unterstehen. So kann ein Bild von einem Hund erkannt werden. Jedoch wird das Label nur mit einem Rechteck markiert, was für das Labeln der Schienen ungeeignet ist. In einem Beispielbild mit Schienen konnten keine Label vom dem Programm erkannt werden. Das lässt darauf schließen, dass das Model nur bestimmte Kategorien von Labeln erkennen kann. Ein großer Vorteil ist, dass Label direkt über das COCO JSON-Format importiert werden können. Diese Eigenschaft wird sich zu einem späteren Zeitpunkt noch positiv auf das Projekt auswirken.
+
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{dog}
+  \caption{Erkanntes Bild vom SSD Model}
+\end{figure}
+
+Github: \url{https://github.com/SkalskiP/make-sense} 
+\subsection{Matlab Image Labeler}
+\label{sec:Matlab Image Labeler}
+
+Der Matlab Image Labeler ist eine App des Programms Matlab. Auch dieses Tool setzt auf AI-Unterstützung. So gibt es "Smart-Polygon" und eine "Assisted Freehand" Funktion. Sonst unterscheidet sich das Programm nicht von den anderen gängigen Labeltools.
+\\
+
+\textbf{Pro:} 
+\begin{itemize}
+	\item Installation durch Matlab
+	\item Bewegung im Bild problemlos
+	\item intuitives Interface mit vielen Möglichkeiten
+	\item gute Übersicht über die Labels
+\end{itemize}
+\textbf{Contra:} 
+\begin{itemize}
+	\item Sehr Ressourcenlastig und teilweise langsam
+	\item AI-Tools funktionieren nicht entsprechend
+	\item Import nur in .Mat-Format
+	\item Export der Daten nur in Ground Truth
+\end{itemize}
+
+
+
+\section{Programm "LabelTool"}
+\label{sec:Programm "LabelTool"}
+\subsection{Grundlagenforschung}
+\label{sec:Grundlagenforschung}
+
+\subsubsection{Die projektive Ebene}
+\label{sec:Die projektive Ebene}
+
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{projektive}
+  \caption{Kamera- und Bildkoordinaten}
+\end{figure}
+
+\noindent
+Die projektive Ebene findet ihren Ursprung in der Malerei der italienischen
+Renaissance. Dort versuchte man die Realität, insbesondere die Architektur, korrekt
+in Gemälden widerzuspiegeln. Dabei ging es vor allem um projektive Effekte im
+unendlichen, wie der Schnitt zweier parallel verlaufender Geraden im imaginären
+Fluchtpunkt unter projektiver Abbildung auf eine Ebene.
+Die Grundlage projektiver Räume ist durch homogene Koordinaten gegeben, deren
+Haupteigenschaft die Invarianz (Unveränderlichkeit) gegenüber Skalierungen ist.
+Diese werden durch (n+1)-dimensionale Vektoren beschrieben. Die projektiven
+Punkte eines Raumes können sich als Strahlen vorgestellt werden, welche durch
+den Ursprung eines 3D-Koordinatensystems verlaufen. Alle auf dem Strahl
+befindlichen Punkte sind mit einer Multiplikation eines geeignet Skalierungsfaktors
+ineinander überführbar und somit äquivalent. Dabei existieren für parallel zur jeweils
+gewählten Ebene verlaufende Strahlen keine Repräsentanten. Im Sonderfall der
+parallel zur xy-Ebene gelegenen Ebene E : z = 1 ergeben sich alle Repräsentanten
+aus den geschnittenen Strahlen durch Skalierung der dritten Vektorkomponenten auf
+1.
+Diese Arbeit liegt dem Modell der Lochkamera zugrunde, wobei das
+Projektionszentrum der Kamera im Ursprung eines 3D-Kamerakoordinatensystems
+liegt (siehe Abbildung 1). Die optische Achse fällt mit der z-Achse des
+Koordinatensystems zusammen. Im Abstand der Bildweite( focal length) f > 0 vom
+optischen zentrum befindet sich die Bildebene, auf die die 3D-Welt zweidimensional
+abgebildet wird (z = 1). Die Bildebene ist dabei stets parallel zur x-y-Ebene des
+3D-Koordinatensystems. Der Hauptpunkt an dem die optische Achse die Bildebene
+durchstößt, liegt demnach an Position (px,py,1) auf der Ebene. Die Projektion eines
+beliebigen 3D-Punktes(Objekt) des Kamerakoordinatensystems auf die Bildebene
+ergibt sich in diesem Modell als Schnittpunkt des Richtungsstrahls vom optischen
+Kamerazentrum zum Punkt der Kamerakoordinaten(x,y,z) mit der Bildebene. Dabei
+ist noch unberücksichtigt geblieben, dass die beiden Koordinatenachsen der
+Bildebene in der Regel jeweils unterschiedlich und darüber hinaus unabhängig vom
+3D-Koordinatensystem der Kamera skaliert sind. Um die Bildkoordinaten in
+Pixelkoordinaten korrekt umrechnen zu können, müssen somit bei der Abbildung in
+x- und y-Richtung jeweils spezifische Skalierungsfaktoren berücksichtigt werden.
+Durch das Wissen um die Kameraparamter (Brennweite, focal lenght) der
+entsprechenden Kameramatrix und der Kameraposition(Translations- und
+Rotationsmatrix) können die Weltkoordinaten (entsprechen Größen der realen Welt)
+in Bildkoordinaten (Pixel) umgerechnet werden. Dazu wird hintereinander eine
+Transformation von Welt → Kamera und Kamera → Bild durchgeführt.
+\begin{lstlisting}
+	FORMEL HIER
+\end{lstlisting}
+Das bedeutet, die Bildkoordinaten pimg entsprechen einer Multiplikation der
+Kameramatrix K, mit der Rotationsmatrix R|t und den Weltkoordinaten pworld  Bei
+allen Variablen handelt es sich um 3d-Vektoren. So können im Umkehrschluss auch
+Bild- zu Weltkoordinaten problemlos umgerechnet werden.
+
+\subsubsection{Berechnung der Hilfslinie}
+\label{sec:Berechnung der Hilfslinie}
+
+\noindent
+Der exakte Abstand zwischen den beiden Endpunkten des Ar-Track wird berechnet,
+indem der Mittelpunkt (x-y-Koordinaten) des Mauszeigers an der jeweiligen Position
+genommen und in Weltkoordinaten umgerechnet wird. In der echten Welt verändert
+sich die Breite des Ar-tracks nicht, weshalb wir diesen einfach mit einem
+Spaltenvektor mit 3 Dimensionen nach links (linke Schiene) und nach rechts (rechte
+Schiene) verschieben können. Danach werden diese Punkte wieder in
+Bildkoordinaten umgerechnet, wodurch wir wieder die perspektivische Sicht erhalten.
+In allen Berechnungen wird angenommen, dass wir geradeaus schauen und nichts
+im Wege ist. Damit sind die Dimensionen nicht mehr variabel und eine Umrechnung
+ist möglich.
+
+\subsubsection{Der Catmull-Rom Spline}
+
+\noindent
+Da die Endpunkte der Hilfslinie auf die jeweils linke und rechte Schiene Abbilden,
+können diese Punkte dazu genutzt werden einen Catmull-Rom Spline zu zeichnen,
+welcher den Verlauf der Schiene markiert. Ein Catmull-Rom Spline ist eine
+stückweise definierte polynomiale Funktion mit mindestens vier Punkten. Nach dem
+Setzen des vierten Punktes, werden Punkte 1 und 4 als Stützpunkte herangezogen
+und zwischen Punkte 2 und 3 ein Spline gezogen. Durch die Stützpunkte kann der
+Verlauf relativ genau interpoliert werden. Möchten wir einen Spline durch k Punkte
+ziehen, dann brauchen wir insgesamt k+2 Stützpunkte. Das Programm speichert die
+Punkte auf den Schienen, während der Benutzer die “Centerpoints” setzt und
+zeichnet ab dem vierten Punkt den ersten Spline auf der Schiene.
+
+\begin{figure}[H]
+  \includegraphics[width=0.8\textwidth]{cat}
+  \caption{Catmull-Rom Spline}
+\end{figure}
+
+
+\subsection{Analyse des Annotation Tool's von Herrn Mario Hoffmann}
+\label{sec:Analyse des Annotation Tool's von Herrn Mario Hoffmann}
+
+Das vorliegende "Annotation Tool" von Herrn Mario Hoffmann wurde im Rahmen des Projekts SE Perception zum qualitativen Labeln von Mittelpunkten einer Schiene erstellt. Dazu sollten immer gleich viele Mittelpunkte in einem festen Abstand auf einem Bild markiert werden. Diese Daten wurden dafür verwendet ein Neuronales Netzwerk auf die Erkennung von Mittelpunkten zu trainieren.
+
+\subsubsection{Informelle Beschreibung und komplxitätsanalyse}
+\label{Informelle Beschreibung und komplxitätsanalyse}
+
+\textbf{Installation:} 
+\begin{itemize}
+	\item OpenCV, Version, bevorzugt 3.4.7 und gcc Toolchain installieren
+	\item git clonen
+	\item In das Verzeichnis wechseln: cd Videoplayer
+	\item Build directory erstellen und in Dieses wechseln: mkdir -p build cd build
+	\item CMake konfigurieren und Anwendung kompilieren: cmake .. make
+\end{itemize}
+
+Das Programm "Annotation Tool" bietet dem Nutzer die Möglichkeit einen Ordner von Bildern und eine Kamera-Matrix einzulesen und dann realitätsgetreu durch Abbildung der projektiven Ebene Mittelpunkte von Schienen markieren zu können. Das Programm wurde in C++ unter Verwendung der OpenCV Bibliothek realisiert.  Der grobe Ablauf kann folgendermaßen dargestellt werden:
+
+\begin{enumerate}
+	\item der User startet das Programm über den Terminal (Linux) mit folgendem Befehl: ./videoplayer --label -yaml="Pfad zur yaml-Datein" "Pfad zu den Bildern"
+	\item das Programm öffnet sich und zeichnet das Bild samt Hilfslinie
+	\item der User wählt zwischen "x", "y" und "c" für Mittelschiene, linke Schiene oder rechte Schiene
+	\item der User bewegt den Mauszeiger über die Schiene und versucht mit der Hilfslinie die Mitte der Schiene abzuschätzen
+	\item der User setzt mit "d" entlang der Equidistant (gleicher Abstand) Linien die Punkte in der Mitte der Schiene
+	\item der User speichert mit "s" die Mittelpunkte in einer yaml-Datei
+	\item der User wechselt mit "n" zum nächsten Bild
+	\item der User beendet mit "q" das Programm
+\end{enumerate}
+\noindent
+Diese Funktionalitäten wurden durch verschiedene Bibliotheken realierst, welche vorher installiert werden müssen. 
+Verwendete Bibliotheken:
+
+\begin{itemize}
+	\item OpenCV, Version 3.4.7 Algorithmen für die Bildverarbeitung und Computer Vision
+	\item nlohnmann JSON für Modern C++
+\end{itemize}
+
+Neben diesen Bibliotheken wurden noch weitere Headerdatein eingebunden, um Funktionalitäten aus dem Videoplayer und die Berechnungen der Matritzen nutzen zu können:
+
+\begin{itemize}
+	\item "Videoplayer.h"
+	\item "Camera.h"
+\end{itemize}
+
+\noindent
+Das Programm besteht im Ausgangzustand aus einer Header-File, in der die Datentypen und Funktionen deklariert werden und einer .cpp-Datei, in der die Logik implementiert wurde. Es besteht aus 425 Zeilen Code und eine Fehlerbehandlung ist nur rudimentär vorhanden. Zum speichern der Punkte in Vektoren wird ein Struct verwendet, welches den Namen "LabelImage" trägt. Das Programm liest aus der Command-Zeile per Commandline-Parser die Eingabebefehle. Beim Ausführen wird zunächst die Label-manual angezeigt. Danach werden die angegebenen Bilder eingelesen und zu jedem Bild ein "LabelImage" erstellt. Nach dem Einlesen startet das Labeltool und liest die Kamera-Matrix und die yaml-Datei für eventuell existierende Punkte ein. Die Hauptfunktion? stellt eine while-Schleife dar, welche mit jedem Durchlauf das eingelesene Bild in ein neues Mat-Objekt kopiert, damit die Hilfslinie immer auf einem neuen Bild gezeichnet wird und somit der Effekt entsteht, dass es sich dabei um eine dynamisch-bewegbare Linie handelt. Weiterhin wird in dieser Schleife der User-Input verwertet und die Punkte gezeichnet.
+\\
+\noindent
+Das Programm kann in folgenden Aufbau aufgegliedert werden:
+\begin{itemize}
+	\item Filehandling - Einlesen der Bilder, yaml-Datein und Kamera-Matrix
+	\item Inputhandling - Verwertung von Usereingaben
+	\item Punkte speichern und löschen - Speichern der Punkte in Vektoren des Structs "LabelImage"
+	\item Hilfslinie anzeigen - zeichnen der Hilfslinie am Punkt der Maus
+	\item Berechnung der Equidistant-Linien - exakte Abstände zwischen Horizont und erstem Punkt auf der z-Achse
+	\item Output generieren - schreiben der yaml-Datei mit OpenCV Filestorage
+\end{itemize}
+
+\noindent
+\\
+\textbf{Filehandling:}
+\noindent
+Das Filehandling übernehmen die Funktionen:
+\begin{itemize}
+	\item void readImageList(const path,  lblList)
+	\item readJson(lblImages)
+	\item Camera(yamlFileName) aus "Camera.h" Include
+\end{itemize}
+
+\noindent
+Die Funktion readImageList(const path,  lblList) bekommt als Input einen Pfad und einen Vektor in dem die "LabelImages" gespeichert werden. Danach wird mit einem Directory-Iterator über die Bilder im Pfad iteriert, jedes "LabelImage" nach dem jeweiligen Bild benannt und danach das "LabelImage" auf dem Vektor gespeichert. Die readJson(lblList) bekommt als Input die Liste der gespeicherten "LabelImages" und sucht in dem gleichen Directory nach einer Datei, welche den selben Namen aber als Dateiendung ".yaml" trägt. Danach werden mit der OpenCV Filestorage Klasse die Punkte aus der yaml-Datei in den Vektoren der "LabelImages" gespeichert. Die Camera(yamlFileName) Funktion bekommt lediglich den Pfad der yaml-Datein und lädt diese Kamera-Matrix durch den Constructor unter Verwendung der OpenCV Filestorage Klasse.
+
+
+\noindent
+\\
+\textbf{Inputhandling:}
+\noindent
+Das Inputhandling wird durch eine einfach Switch-Case-Struktur realisiert.
+
+\noindent
+\\
+\textbf{Punkte speichern und löschen:}
+\noindent
+Diese Funktionalitäten wurden durch folgende Funktionen realisiert:
+\begin{itemize}
+	\item void savePoint(Point , LabelImg, equidistantY)
+	\item void removeClosestPoint(LabelImg)
+\end{itemize}
+
+\noindent
+Zum Speichern eines Punktes wird der savePoint(Point , LabelImg, equidistantY) Funktion die momentane Mausposition als OpenCV Datentyp Point\footnote{Template Klasse für 2D-Punkte mit x- und y-Koordinate}, das jeweilige "LabelImage" und die Equidistant-Punkte übergeben. Beim Speichern wird abgefragt, wie weit entfernt der Cursor sich von den Equidistant-Linien befindet und sollten dies 10 Pixel sein, dann wird der Punkt automatisch auf dieser Linie gesetzt und auf den Vektor Equidistantpoints des "LabelImage" gespeichert. Danach wird mit einem Switch-Case überprüft, welche Schiene angewählt ist und entsprechend der Punkt auf dem Vektor gespeichert. Gelöscht werden die Punkte durch eine Abfrage in einem Switch-Case, welche Schiene angewählt ist. Danach wird ein Pointer auf den Adressspeicher des jeweiligen Vektors initialisiert. Sollte der momentane Mauspunkt näher als einem bestimmten Schwellenwert sein, dann wird dieser Adressspeicher wieder freigegeben. 
+
+\noindent
+\\
+\textbf{Hilfslinie anzeigen:}
+\noindent
+Diese Funktionalitäten wurden durch folgende Funktionen realisiert:
+\begin{itemize}
+	\item void drawArTrack(img, LabelImg)
+\end{itemize}
+
+\noindent
+In dieser Funktion werden die momentanen Korrdinaten des Mauszeigers genommen und von Pixel- in Weltkoordinaten umgerechnet(Beschrieben in Kapitel: Grundlagenforschung). Dieser Punkt wird dann um jeweils (-1435/2)\footnote{1435mm ist der exakt genormte Abstand zwischen der linken und rechten Schiene} nach links und (1435/2) nach rechts verschoben. Dort werden diese Punkte wieder in Pixelkoordinaten umgerechnet, sodass durch die Open CV circle() und line() Funktionen die Hilfslinie gezeichnet werden können. Da in der while-Schleife bei jedem Durchlauf auf einem neuen Bild gezeichnet wird, entsteht der Effekt einer sich frei bewegenden Linie.
+
+\noindent
+\\
+\textbf{Berechnung der Equidistant-Linien :}
+\noindent
+Diese Funktionalitäten wurden durch folgende Funktionen realisiert:
+\begin{itemize}
+	\item void getEquidinstantY(image)
+\end{itemize}
+
+\noindent
+Diese Funktion errechnet anhand eines gegebenen Horizonts und dem ersten sich im Bild befindlichen Punktes auf der z-Achse(Beschrieben in Grundlagenforschung) die Equidistant-Linien. Dafür wird zunächst eine z-Achse definiert, welche den ersten im Bild sichtbaren Punkt auf der z-Achse in Weltkoordinaten umgerechnet. Danach werden mit einer Forschleife und einem in Weltkoordinaten festgelgten Horizonts und einer festen Anzahl an Linien y-Punkte errechnet.
+\begin{lstlisting}
+for (int i = 0; i <= numLines; ++i ){
+        y =  horizontPointt- (i * ((horizontPoint- z)/numLines));
+        Point3d HWorld = Point3d(0, 0, y);
+        horizonLine = kam.world2pixel(HWorld);
+        eq.push_back(horizonLine.y);
+}
+\end{lstlisting}
+
+\noindent
+\\
+\textbf{Output generieren:}
+\noindent
+Diese Funktionalitäten wurden durch folgende Funktionen realisiert:
+\begin{itemize}
+	\item void writeJson(lblList)
+\end{itemize}
+\noindent
+\\
+Diese Funktion bekommt die Liste mit den "LabelImages" und iteriert über diese mit einer Forschleife. Danach wird für jedes "LabelImage" ein Open CV Filestorage geöffnet und die Punkte werden in die Datei geschrieben.
+
+
+\subsection{Requirements}
+\label{sec:Requirements}
+\subsection{Use Cases}
+\label{sec:Use Cases}
+\subsection{Flussdiagramm}
+\label{sec:Flussdiagramm}
+\subsection{Implementierungen}
+\label{sec:Implementierungen}
+
+In diesem Abschnitt sollen die eigenen Implementierungen im Kontext der abgeleiteten Anforderungen beschrieben.
+\\
+
+\noindent
+\textbf{Filehandling:}
+\\
+
+\noindent
+\begin{tabular}[h]{c|c|c}
+Anforderung LH & Anfoderung PH & Name \\
+\hline
+ LH 1.1 & PH 2.3 & bool  readJson(vector LabelImg)\\
+LH 2 & PH 3 & bool readJson(vector LabelImg)\\
+LH 2 & PH 3 &void drawPolygons(Mat img, vector labels, bool filled)\\
+LH 2 & PH 3 & void drawPolygon(Mat img,Polygonpoints, bool filled, Scalar color)\\
+LH 2 & PH 3 &void createCatMullRomPolygon(Mat img,LabelImg, bool filled)\\
+LH 2 & PH 3 &void DrawCatmullRomSegment()\\
+
+\end{tabular}
+\\
+\\
+
+\noindent
+\underline{\textbf{PH 2.3 Das System muss Schienenpunktinformationen einlesen können :}}
+\\
+
+\noindent
+Um diese Funktion zu realiseren wurden folgende Funktionen implementiert:
+\begin{itemize}
+	\item bool readJson(vector LabelImg)
+\end{itemize}
+
+\noindent
+\\
+\noindent
+\underline{readJson(vector LabelImg)):}
+\\
+
+\noindent
+Die Funktion zum Einlesen der yaml-Datein für die Punkte auf den Schienen bekommt den Vektor mit den jeweiligen eingelesenen "LabelImages" übergeben. Es wurde eine Abfrage beim Start des Programm implementiert, welche die Auswertung einer Boolean beinhaltet, ob eine yaml-Datei mit Schienenpunkten gelesen wurde. Sollte dies nicht der Fall sein, dann wird eine Mittelpunkt-Datein eingelesen damit garantiert werden kann, dass die alten existenten Mittelpunkt-Datein genutzt werden können. Da die Funktion zum Einlesen vorhanden war, wird hier nur auf die neue Funktion zum Einlesen der Schienenpunkte eingegangen. Dazu wurde die OpenCV Filestorage Klasse verwendet , welche zunächst abfragt, ob die Filestorage geöffnet wurde. Danach wurden Filenodes gesetzt, welche nach den jeweiligen Stichworten "ego track", "left neighbor" und "right neighbor" in der yaml-Datei als Anker haben, um darauf zugreifen zu können. Die yaml-Dateien haben dabei folgendes Format:
+\begin{figure}[H]
+  \includegraphics[width=0.4\textwidth]{yaml}
+  \caption{Aufbau yaml-Datei}
+\end{figure}
+\noindent
+Es können dabei belieb viele linke und rechte Nachbarn in der Datein vorhanden sein, jedoch nurb ein "Ego Track". Über diese Filenodes wird nun mit einer For-Schleife iteriert und ein neuer Filenode gesetzt, welcher in der nächsten Ebene der yaml-Datei auf "ego track", "leftrail" und "rightrail" zugreift. Da es sich bei diesem Filenode um einen normalen Vektor mit den entsprechenden Punkten handelt, kann auch über diesen problemlos iteriert werden (Abbildung XX). In dieser Schleife wird ein neuer Punkt von OpenCV-Datentyp Point erstellt. Da die Punkte in der yaml-Datei hintereinander mit x- und y-Korrdinate gespeichert sind, erhöt sich der Schleifeniterator um +=2. Diese Punkte werden dann auf den entsprechenden Vektor des Structs "label" gespeichert.
+\\
+
+\noindent
+\underline{\textbf {PH 3 Das System muss aus eingelesenen Informationen Schienenmarkierungen generieren:}}
+\\
+
+\noindent
+Um diese Funktion zu realiseren wurden folgende Funktionen implementiert:
+\begin{itemize}
+	\item bool readJson(vector LabelImg)
+	\item void drawPolygons(Mat img, vector labels, bool filled)
+	\item void drawPolygon(Mat img,Polygonpoints, bool filled, Scalar color)
+	\item void createCatMullRomPolygon(Mat img,LabelImg, bool filled)
+	\item void DrawCatmullRomSegment(
+\end{itemize}
+
+\noindent
+Um aus den eingelesenen Punkten eine Schienenmarkierung generieren zu können, wird in der Funktion readJson(vector LabelImg) vor dem Einlesen der jeweiligen Schiene ein neues Struct "Label" mit dem Namen der Schiene erstellt. Dieses Struct enthält folgende Attribute:
+\begin{itemize}
+	\item int id
+	\item int categoryId
+	\item vector$<$Point$>$ trackbedPolygon
+	\item vector$<$Point$>$  rightRailPolygon
+	\item vector$<$Point$>$  leftRailPolygon
+	\item vector$<$Point$>$  rCatMullPoint
+	\item vector$<$Point$>$  lCatMullPoint
+	\item vector$<$Point$>$  centerPoin
+	\item Scalar color
+	\item Scalar trackbedColor
+\end{itemize}
+\noindent
+Die Schienenmittelpunkte, die dazugehörige Farbe und Kategorie-Id werden mit dem einlesen der Punkte in dem Struct gespeichert. Die "Label"-Structs werden in dem neu erstellen Vector "labels" des "LabelImage" gespeichert. 
+\begin{figure}[H]
+  \includegraphics[width=0.6\textwidth]{create}
+  \caption{Beispiel create label}
+\end{figure}
+\noindent
+\underline{createCatMullRomPolygon(Mat img, LabelImg, float steps):}
+\\
+
+\noindent
+Diese Punkte können nun dazu genutzt werden, mit der Funktioin createCatMullRomPolygon(Mat img, LabelImg, float steps), welche das momentane Bild, das Struct "LabelImg" und eine Anzahl an Interpolationsschritten zwischen zwei Punkten übergeben bekommt, die Polygon-Label zu genenrieren. Dazu wird mit einer For-Schleife über den Vector "Labels" vom "LabelImage" iteriert. Dieser Vector beinhaltet die beim Einlesen erstellten "label"-Structs. Mit einer weiteren For-Schelife bekommt man den Zugriff auf die gespeicherten Schienenmittelpunkte, welche vorab sortiert werden, damit ein dynamisches Einfügen von Punkten möglich gemacht werden kann.
+\\
+
+\noindent
+\underline{void DrawCatmullRomSegment():}
+\\
+
+\noindent
+ Mit einer For-Schleife wird nun über die entsprechenden Schienenmittelpunkt-Vektoren, iteriert und die Funktion DrawCatmullRomSegment() darauf angewendet. Diese Funktion bekommt das auf dem zu zeichnende Bild, das Struct LabelImage und vier Punkte aus dem Vektor ziwschen denen Interpoliert werden soll, mit der Anzahl der jeweiligen Interpolationsschritte übergeben. Diese Funktion berechnet dann ein Catmull-Rom Spline (Beschrieben in Grundlagen) durch die vier Punkte, mit einem Abstand der Interpolationspunkte entsprechend der Anzahl an Steps, welche übergeben wurden. Diese Interpolationspunkte werden dann von Pixel in Weltkoordinaten umgerechnet und auf der x-Achse exakt um (67/2)mm nach links und nach rechts verschoeben. Die 67mm repräsentieren in diesem Fall die im Kapitel "Grundlagen" beschriebene Breite des Schienenkopfes. Als Ergebnis bilden nun die linken und rechten Interpolationspunkte zwischen den vier Catmull-Rom Punkten genau auf den äußeren Rand einer Schiene ab. Abschließend werden diese in Pixelkoordinaten zurückgerechnet und auf Hilfsvektoren des Labelimages gespeichert, sollten diese sich im Bild befinden (Es kann sein, dass Punkte außererhalb des Bildbereiches markiert werden, da die Messlinie in vielen Fällen nicht gerade ist und deshalb teilweise aus dem Bild rausragt). 
+Diese Hilfsvektoren repräsentieren nun den linken und rechten äußeren Rand einer Schiene. Um daraus ein Polygon zu erstellen, müssen diese Punkte nun in richtiger Reinfolge in einem Vektor gespeichert werden. Da das gewählte Drittanbieter-Tool makesense.ai das COCO Json-Format verwendet, müssen die Punkte der Reihenfolge nach wie sie gezeichnet werden sollen, auch gespeichert werden. Dazu wird der Vektor mit den Punkten des rechten Randes invertiert und mit dem Vektor des linken Randes konkatiniert und in dem entsprechenden Polygon-Vektor des Labels gespeichert.
+\begin{figure}[H]
+  \includegraphics[width=0.4\textwidth]{poly}
+  \caption{Reinfolge der Polygonpunkte}
+\end{figure}
+
+
+\noindent
+\underline{drawPolygons(Mat img, vector labels, bool filled):}
+\\
+
+\noindent
+Damit die Label auf dem Bild gezeichnet werden können, wurde die Funktion drawPolygons(Mat img, vector labels, bool filled) implementiert. Diese Funktion bekommt das Bild  auf dem gezeichnet werden soll, den Vector "labels" des Structs "LabelImage" und eine Boolean übergeben, ob das Polygon gefüllt werden soll oder nicht. In der Funktion wird über die einzelnen Polygon-Vektoren iteriert, welche durch die Funktion createCatmullRomPolygon() generiert wurden. Für jeden dieser Vektoren wird die Funktion drawPolygon(Mat img, vector labels, bool filled, Scalar color) aufgerufen. Diese bekommt das aktuelle Bild, den Vektor der Polygonpunkte, eine Boolean ob das Polygon befüllt werden soll und eine Farbe für das Label übergeben. In der Funktion Polygonpunkte auf einem Vektor von Vektoren gespeichert und eine Abfrage ausgeführt, ob das Polygon gefüllt werden soll, wenn nicht, dann wird die OpenCV Funktion polylines() aufgerufen, welche die Polygonpunkte miteinander verbindert. Soll das Polygon gefüllt werden, wird die OpenCV-Funktion fillpoly() aufgerufen, welche den Vektor von Vektorn der Polygonpunkte übergeben bekommt. 
+\\
+
+\noindent
+\textbf{Punkte speichern und löschen:}
+\\
+
+\noindent
+\begin{tabular}[h]{c|c|c}
+Anforderung LH & Anfoderung PH & Name \\
+\hline
+LH 3& PH 4 & void createNewLabel(LabelImg)\\
+LH 3 & PH 4.1 & void createNewLabel(LabelImg)\\
+LH 3 & PH 5 &label selectLabel(LabelImg, int lblIdx)\\
+LH 3.1 & PH 5.1 & void saveCatMullPoint(selecedtLabel, LabelImg, img)\\
+LH 3.1 & PH 5.1 & void removeClosestCatMullPoint(selectedLabel)\\
+LH 3.1 & PH 5.1 & void deleteLabelFromActiveLabels(LabelImg)\\
+LH 3.1 & PH 5.2 & void void drawGaugeLine(img, LabelImg, label)\\
+\end{tabular}
+\\
+\\
+
+\noindent
+\underline{\textbf {PH 4   Das System muss beliebig viele Schienenmarkierungen generieren können:}}
+\\
+
+\noindent
+\underline{createNewLabel(LabelImg lblImg):}
+\\
+
+\noindent
+Um beliebig viele Nachbar erstellen zu können, wurde die Funktion createNewLabel(LabelImage) implementiert. Diese Funktion vom Typ void bekommt ein LabelImg übergeben. Zuerst wird abgefragt, ob der Vektor labels des LabelImage-Structs leer ist. Sollte dies der Fall sein, dann wird ein neues Label für den "ego track" generiert. Ist der Vektor nicht leer überprüft diese Funktion den momentan Mauspunkt auf dem Bildschirm. Sollte dieser sich links neben dem "ego track" befinden, dann wird ein Label linker Nachbar erstellt und vice versa ein rechter Nachbar. Diese Label werden abschließend auf dem labels-Vektor des Labelimg gespeichert. Damit wurde auch PH 4.1 "Das System muss zwischen rechtem und linkem Nachbar unterscheiden können" erfüllt.
+\\
+
+\noindent
+\underline{\textbf {PH 5 Das System muss zwischen den jeweiligen Schienenmarkierungen wechseln können}}
+\\
+
+\noindent
+\underline{selectLabel(LabelImg lblImg, int lblIdx)):}
+\\
+
+\noindent
+Damit der Benutzer die Möglichkeit hat auszuwählen, welche Schiene er markieren möchte, wurde die Funktion selectLabel(LabelImg lblImg, int lblIdx)) implemlementiert. Die Funktion vom Typ label bekommt das LabelImage und die globale Variable lblIdx, welches den momentanen Index des ausgewählten Labels darstellt, übergeben. Dieser Index wird über den Input der Zahlen "1-9" vom User gesteuert. Zuerst findet eine Abfrage statt, ob der Vektor labels vom LabelImage leer ist. Ist dies nicht der Fall, dann wird überprüft, ob der Index kleiner als die momentan Größe des Vektors labels ist. Ist dies der Fall, den gibt die Funktion das label mit dem jeweiligen Index wieder. Andernfalls wird ausgegeben, dass dieses Label nicht existiert. Ist der Vektor labels leer, dann wird ein neues label erstellt und dieses zurückgegeben.
+\\
+
+\noindent
+\underline{\textbf {PH 5.1 Das System muss die angewählten Schienenmarkierungen verändern können:}}
+\\
+
+\noindent
+\underline{saveCatMullPoint(label lbl, LabelImg lblImg, Mat img):}
+\\
+
+\noindent
+Diese Funktion soll die Punkte auf der Mitte der linken und rechten Schiene speichern. Dazu bekommt sie das aktuell ausgewählte Label, das LabelImage und das Bild übergeben, auf dem momentan gezeichnet wird. Zunächst wird abgefragt, ob der User das Mittelpunkt-Labeling oder das Seiten-fokusierte-Labeling nutzt. Danach wird entsprechend beim Mittelpunkt-Labeling der jeweilige Mittelpunkt in Weltkoordinaten umgerechnet und um (1502/2)mm nach links und rechts auf der x-Achse verschoben. 1502mm entstehen daraus, dass man die Spurweite von 1435 mit der Schienenbreite addiert. (Mittelpunkt Schiene = 67mm/2, für beide Schienen (67mm/2)*2). Diese Punkte werden wieder in Pixelkoordinaten umgerechnet und in dem entsprechenden Vektor der jeweiligen Schiene gespeichert. Ist das Seiten-fokusierte-Labeling aktiv, dann wird zunächst die momentane Mausposition als linker Punkt auf der Schiene gesehen und von Pixel- in Weltkoordinaten umgewandelt. Danach wird dieser um 1502mm auf der x-Achse verschoben, um auf die andere Schiene abzubilden. Ist die globale Variable "switch sides" wahr, dann wird der rechte Punkt fokusiert. Dieses vorgehen ist notwendig, da die Messlinie oft nicht komplett gerade ist (Roll-Winkel) und deshalb können einseitig nicht alle Punkte gesetzt werden. Sollte die ersten Punkte für ein neues Schienenlabel gesetzt werden, dann wird der selbe Punkt um 1 auf der y-Achse verschoben wiederholt gespeichert, damit nur zwei weitere Punkte für den Catmull-Rom Spline gesetzt werden müssen, bis dieser gezeichnet wird. 
+\\
+
+\noindent
+\underline{removeClosestCatMullPoint(label lbl)):}
+
+
+\noindent
+Diese Funktion bekommt das ausgewählte label übergeben. Zunächst werden Pointer auf den Adressspeicher der Vektoren allokiert, aus denen entsprechende Punkte gelöscht werden soll. Wenn der jeweilige Vektor nicht leer ist, dann wird geprüft welcher Punkte auf der linken oder rechten Schiene dem Mauszeiger am nähesten ist. Danach wird der Index erfasst und sollte der Mauszeiger weniger als 100 Pixel vom nächsten Punkt im Vektor sein, dann wird der Adresspeicher freigegeben. Anhand des Indexes wird danach der Punkt auf der anderen Seite gelöscht und am Ende der Mittelpunkt.
+\\
+
+\noindent
+\underline{void deleteLabelFromActiveLabels(LabelImg lblImg):}
+\\
+
+\noindent
+Der Funktion wird das LabelImage übergeben. Zunächst wird über den globalen Vektor "activeRails" iteriert, welcher die aktiven Labels als Tupel mit der jeweiligen id hält. Wenn der Mauszeiger weniger als 20 Pixel von der x- und y-Koordinate des oberen Punktes der Linie, welche für das Label mit der jeweiligen Farbe steht, entfernt ist, dann wird das Label mit der korrespondierenden id aus dem Vektor labels des LabelImages gelöscht.
+\\
+
+\noindent
+\underline{\textbf {PH 5.2 Das System muss die Länge der Messlinie anpassen können:}}
+\\
+
+\noindent
+Hier reinschreiben jo
+\\
+
+\noindent
+\textbf{Output generieren:}
+\\
+
+\noindent
+\begin{tabular}[h]{c|c|c}
+Anforderung LH & Anfoderung PH & Name \\
+\hline
+ LH 4& PH 6 & bool readJson(vector LabelImage)\\
+LH 5 & PH 7 & void writeJson(LabelImg)\\
+LH 6 & PH 8.1 & void createPixelMask(LabelImg , Label)\\
+LH 6 & PH 8.2 & void createGroundTruth(LabelImg, gTruth)\\
+LH 6 & PH 8.3 & void writeJsonPolygon(LabelImg, img)\\
+\end{tabular}
+\\
+\\
+
+\noindent
+\underline{\textbf {LH 6  Das System muss prüfen, ob Segmentierungsinformationen vorhanden sind:}}
+\\
+
+\noindent
+Um die Abfrage nach vorhandenen Segmentierungsinformationen gewährleisten zu können, wurde Funktion readJson(vector LabelImage) ein Rückgabewert vom Typ Boolean gegeben, welcher True ist, wenn Segmentierungsinformationen vorhanden sind und gelesen werden können.
+\\
+
+\noindent
+\underline{\textbf {PH 7 Das System muss vorhandene Markierungen von Schienen- und Mittelpunkten wiedereinlesbar in einer Datei speichern:}}
+\\
+
+\noindent
+\underline{writeJson(LabelImg lblImg):}
+\\
+
+\noindent
+Diese Funktion schreibt die Vektrodaten der Catmull-Rom-Punkte der Schienen und Mittelpunkte in eine yaml-Datei, welche, wie in PH 3 beschrieben wurde, wieder eingelesen werden kann. Es wird die nlohmann-Bibliothek verwendet, welche den Datentyp json bereistellt. Damit können Vektoren mit diesem Datentyp erstellt werden, welche das entsprechende Format berücksichtigen. Zunächst prüft die Funktion, ob ein Ordner mit dem namen "yaml-files" vorhanden ist. Wenn nicht, dann wird dieser erstellt. Danach wird über die Vektoren der labels des LabelImages iteriert und einzelne Punkte im json Format auf den Vektoren gespeichert.  Es wird für jede der Schienen(linker Nachbar, rechter Nachbar und Ego Track) ein weiteres Json-Objekt erstellt, welches die jeweiligen Json-Vektoren der Schienen zugewiesen bekommt. So kann interativ eine Struktur erstellt werden. Es wird jede äußere Klammer einer Json-Datein als ein Json-Objekt gesehen, welches weitere Vektoren des json-Typen beinhalten kann. 
+\\
+
+\noindent
+\underline{\textbf {PH 8.1  Das System muss eine Pixelmaske generieren können:}}
+\\
+
+\noindent
+\underline{ void createPixelMask(LabelImg , Label):}
+\\
+
+\noindent
+Diesse Funktion ist simpel gehalten und fragt lediglich ab, ob der Ordner "Pixelmask" im Verzeichnis vorhanden ist und wenn nicht, dann wird dieser erstellt. Danach wird das Label, welches vom Typ Mat ist und vom Programm neben dem Bild erstellt wurde, um darauf die Markierungen zu zeichnen, einfach unter dem jeweiligen Namen des Bildes in dem Ordner gespeichert. 
+\\
+
+\noindent
+\underline{\textbf {PH 8.2 Das System muss aus der Pixelmaske Ground Truth Daten erstellen können:}}
+\\
+
+\noindent
+\underline{void createGroundTruth(LabelImg, gTruth):}
+\\
+
+\noindent
+Dieser Funktion wird  das Label (hier gTruth genant) übergeben und das jeweilige LabelImage. Auch diese FUnktion überprüft, ob sich ein Ordner mit dem Namen "gTruth" im Verzeichnis befindet und wenn nicht, dann wird dieser erstellt. Danach wird das übergebene Label mit den Markierungen in grayscale umgewandelt und damit in das uint8-Format, wobei jedes Pixel nur einen anstatt 3 Byte Informationen trägt. Die jeweiligen Farben der Label(Schiene und Schienenbett) wurden in grayscale analysiert und festgehalten. Danach wird über die Reihen und Zeilen des grayscale-Bildes iteriert und abgefragt, ob ein Pixel den jeweiligen Integer für die korrespondierende Farbe enthält. Sollte dies der Fall sein, dann wird das Pixel mit dem dem neuen Klasseninteger befühllt, welcher in diesem Fall für die Klasse steht und somit dem neuronalen Netzwerk verständlich wird. Für die neuen Klasseninteger würde der Railsem 19-Datensatz erweitert:
+\begin{itemize}
+	\item linker Nachber Klasseninteger: 20
+	\item Mittelschiene Klasseninteger: 21
+	\item rechter Nachber Klasseninteger: 22
+\end{itemize}
+
+\noindent
+\underline{\textbf {PH 8.3 Das System muss eine Vektorpolygon-Datei zur Verwendung bei Drittanbietern generieren können:}}
+\\
+
+\noindent
+\underline{writeJsonPolygon(LabelImg lblImg, Mat image):}
+\\
+
+\noindent
+Diese Funktion wurde auf der selben Grundidee, wie in PH 7 beschrieben, aufgebaut. Es werden Json-Objekte benutzt und das jeweilige Format in eine Datein speichern zu können, nur dass in diesem Fall die Polygonpunkte der Labels in den jeweiligen Datein gespeichert werden. Hierzu wurde das COCO Dataset Format gewählt, um bei dem Drittanbieter makesense.ai die Label importieren zu können. Das COCO Dataset Format zeigt sich als besonders einfach und schnell zu erweitern. Der Grudbaufbau gestaltet sich folgendermaßen:
+\begin{lstlisting}  
+{
+    "info": {...},
+    "licenses": [...],
+    "images": [...],
+    "categories": [...], 
+    "annotations": [...],
+}
+\end{lstlisting}
+Unter Info werden die grundlegenden "high-level" Informationen über das jeweilig Dataset definiert. Darunter fallen der Name, das Datum und andere beschreibende Parameter. Licences beinhaltet eine Liste von Bilder-Lizenzen, welche eventuell verwendet wurden. Unter Images wird eine Liste mit allen Bildern angelegt, welche verwendet wurden um daraus Label zu erstellen. Dabei wird jedes Bild mit dem Namen, der Größe, der id und anderen Informationen beschrieben. Categories beinhaltet eine Liste der jeweiligen Label-Kategorien, wobei es sich in unserem Fall lediglich um Schiene und Schienenbett handelt. Interessant wird es bei den annotations. Hier werden die wichtigen Informationen für die jeweilige Markierung im Bild gespeichert. Dabei handelt es sich um eine Liste der jeweiligen individuellen Markierungen des Datasets, wobei hintereinander x und y-Koordinaten gespeichert werden. Jede dieser Markierungen hält zu dem Informationen über die korrespondierende Kategorie, dem dazugehörigen Bild, eine eingene id und eine Abfrage, ob die Markierungen sich überdecken. Beispiel:
+\begin{lstlisting}  
+"annotations": [
+{
+   "segmentation": [[510.66,423.01,511.72,420.03,...,510.45,423.01]],
+    "area": 702.1057499999998,
+    "iscrowd": 0,
+    "image_id": 289343,
+    "bbox": [473.07,395.93,38.65,28.67],
+    "category_id": 18,
+    "id": 1768
+},]
+\end{lstlisting}
+
+\noindent
+
+
+
+\subsection{Ergbenisse und Qualitätskontrolle}
+\label{sec:Ergebnisse und Qualitätskontrolle}
+\section{Fazit}
+\label{sec:Fazit}
+
+
+
+
+\end{document}

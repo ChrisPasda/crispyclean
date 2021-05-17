@@ -1,0 +1,196 @@
+% Encoding: UTF-8
+%% This BibTeX bibliography file was created using BibDesk.
+%% http://bibdesk.sourceforge.net/
+
+
+%% Created for Mak at 2011-07-01 23:12:31 +0200 
+
+
+%% Saved with string encoding Unicode (UTF-8) 
+
+
+
+@electronic{mm2009,
+	Author = {Mustermann, Max},
+	Date-Added = {2010-03-21 22:17:12 +0100},
+	Date-Modified = {2011-07-01 23:11:24 +0200},
+	Language = {de},
+	Month = {11},
+	Timestamp = {2009.12.29},
+	Title = {Ein Beispielbuch},
+	Url = {http://www.example.com},
+	Year = {2009},
+	Bdsk-Url-1 = {http://www.example.com}}
+
+@electronic{mf2005,
+	Author = {Musterfrau, Maxi},
+	Date-Modified = {2011-07-01 23:12:20 +0200},
+	Language = {en},
+	Month = {08},
+	Timestamp = {2009.12.29},
+	Title = {Ein weiteres Beispielbuch},
+	Url = {http://www.example.com},
+	Year = {2005},
+	Bdsk-Url-1 = {http://www.example.com}}
+
+@electronic{se21,
+	Author = {Bahn, Fachverlag},
+	Date-Modified = {20132-04-01 23:12:20 +0200},
+	Language = {de},
+	Month = {08},
+	Timestamp = {2021.04.01},
+	Title = {Systemwissen Eisenbahn},
+	Url = {https://www.bahn-fachverlag.de/wp-content/uploads/2016/05/FB_SWE1_Leseprobe_LP3_s.pdf},
+	Year = {2005},
+	Bdsk-Url-1 = {http://www.example.com}}
+
+@book{aristotle:physics, 
+ author = {Aristotle}, 
+ title = {Physics}, 
+ year = {1929}, 
+ publisher = {G. P. Putnam}, 
+ }
+
+ @electronic{PE,
+	Author = {Unbekannt},
+	Date-Modified = {20132-04-01 23:12:20 +0200},
+	Language = {de},
+	Month = {08},
+	Timestamp = {2021.04.01},
+	Title = {Das Kameramodell},
+	Url = {https://sundoc.bibliothek.uni-halle.de/diss-online/05/05H124/t3.pdf},
+	Year = {2017},
+	Bdsk-Url-1 = {http://www.example.com}}
+
+@book{catmull, 
+ author = {Catmull, Edwin}, 
+ title = {A class of local interpolating splines}, 
+ year = {1974}, 
+ publisher = {Computer Aided Geometric Design.}, 
+ }
+@Dataset{0520,
+  author   = {BOSCH Engineering},
+  date     = {2020-05-20},
+  title    = {ROI measurement 2020-05-20},
+  location = {Hamburg},
+}
+
+@MastersThesis{fh,
+  author      = {Florian Hofstetter},
+  date        = {2021-04-08},
+  institution = {HTW Berlin},
+  title       = {Optimizing the segmentation of video images with neural networks forrailroadtracks},
+}
+
+@Dataset{rs19,
+  author = {Austrian Institute of Technology},
+  date   = {2019},
+  title  = {RailSem19: A Dataset for Semantic Rail Scene Understanding},
+}
+
+@Online{ml,
+  author = {Prof. Dr.-Ing. Peter Lehmann},
+  date   = {2016-04-28},
+  title  = {Ground Truth – Ohne Datenqualität kein Machine Learning. Erfolgsfaktoren für Predictive Analytics, BI und Data Mining},
+  url    = {https://www.uniserv.com/unternehmen/blog/detail/article/ground-truth-ohne-datenqualitaet-kein-machine-learning/},
+}
+
+@Online{mit,
+  author = {Massachusetts Institute of Technology},
+  date   = {2021-04-08},
+  title  = {The MIT License},
+  url    = {https://opensource.org/licenses/mit-license.php},
+}
+
+@Online{cvat,
+  author = {Intel},
+  date   = {2021-04-08},
+  title  = {Computer Vision Annotation Tool (CVAT)},
+  url    = {https://github.com/openvinotoolkit/cvat/blob/develop/cvat/apps/documentation/user_guide.md#ai-tools},
+}
+
+@Online{gnu,
+  author = {Free Software Foundation},
+  date   = {2007-06-29},
+  title  = {GNU General Public License 3},
+  url    = {https://www.gnu.org/licenses/gpl-3.0.de.html},
+}
+
+@Dataset{coco,
+  author = {COCO Consortium},
+  date   = {2015-04-08},
+  title  = {Common Objects in Context},
+  url    = {https://cocodataset.org/#home},
+}
+
+@Online{ssd,
+  author = {Wei Liu},
+  date   = {2015-12-29},
+  title  = {SSD: Single Shot MultiBox Detector},
+  url    = {https://arxiv.org/pdf/1512.02325.pdf},
+}
+
+@Online{spur,
+  author = {Freunde der Eisenbahn Burscheid e.V.},
+  date   = {2021-04-08},
+  title  = {Vorbildwissen oder Wissenswertes für Modellbahner},
+  url    = {http://www.fde-burscheid.de/06_vorbild.php},
+}
+
+@Online{schiene,
+  author = {Heinrich-Krug},
+  date   = {2021-04-08},
+  title  = {Feldbahn- und Vignolschienen in Vorratslängen},
+  url    = {https://www.heinrich-krug.de/schienen-krug/feldbahn-vignolschienen/},
+}
+
+@Article{intrins,
+  author       = {Prof. Dr. Frank Bauernöppel},
+  date         = {2021-04-08},
+  journaltitle = {Bild- und Videoverarbeitung},
+  title        = {Intrinsische Kameraparameter},
+}
+
+@Article{extrins,
+  author       = {Prof. Dr. Frank Bauernöppel},
+  date         = {2021-04-08},
+  journaltitle = {Bild- und Videoverarbeitung},
+  title        = {Extrinsische Kameraparameter},
+}
+
+@Online{cat,
+  author = {Pritish Choudhary},
+  date   = {2016-07-07},
+  title  = {Camera Systems},
+  url    = {https://medium.com/@PritishCh/camera-systems-part-2-adcf59aa8259},
+}
+
+@Online{point,
+  author = {OpenCV},
+  date   = {2021-04-08},
+  title  = {Point Class Template Reference},
+  url    = {https://docs.opencv.org/3.4/db/d4e/classcv_1_1Point__.html},
+}
+
+@Online{file,
+  author = {OpenCV},
+  date   = {2021-04-08},
+  title  = {FileStorage Class Reference},
+  url    = {https://docs.opencv.org/3.4/da/d56/classcv_1_1FileStorage.html},
+}
+
+@Online{wait,
+  author = {OpenCV},
+  date   = {2021-04-08},
+  title  = {High-level GUI},
+  url    = {https://docs.opencv.org/master/d7/dfc/group__highgui.html},
+}
+
+@Online{uml,
+  author = {Obejct Management Group},
+  date   = {2021-04-08},
+  title  = {Unified Modeling Language},
+  url    = {https://www.omg.org/spec/UML/2.5.1},
+}
+
+@Comment{jabref-meta: databaseType:biblatex;}

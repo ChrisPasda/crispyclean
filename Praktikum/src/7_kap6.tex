@@ -1,0 +1,219 @@
+\section{Ergbenisse und Qualitätskontrolle}
+\label{sec:Ergebnisse und Qualitätskontrolle}
+
+\noindent
+In diesem Abschnitt soll analysiert werden, ob sich der Einsatz des ``Labeltools`` im Vergleich zu händischem Labeln lohnt und ob die Ergebnisse annähernd vergleichbar sind. Das Labeltool wird dabei auf den Zeitaufwand und auf die Qualität der generierten Label untersucht.
+\noindent
+\subsection{Mittelpunktgenerierte Markierungen}
+\label{sec:Mittelpunkt Generierung}
+
+\noindent
+In diesem Abschnitt sollen die vom Programm semi-automatisch erstellen Markierungen aus den Mittelpunkt-Datein überprüft werden. Dazu wurden Bilder und Mittelpunkt-Datein der Aufnahmen\footnote{BOSCH Engineering(20-05-2020) siehe~\cite{0520}} vom 20.05.2020 der Firma BOSCH Engineering verwendet. Beispielhaft werden hier 5 aussagekräftige Bilder präsentiert und ausgewertet. Die Bewertung der Label geschieht nach folgenden Kriterien:
+\\
+
+\noindent
+\begin{itemize}
+	\item Abbild der Schiene
+	\item Einstellung Kamera-Matrix
+	\item Anzahl an Veränderungen im Verhältnis zur Zeitinvestition
+	\item Verwendbarkeit für machine learning
+\end{itemize}
+
+\begin{tabular}[h]{c|c}
+Name & Bewertung  \\
+\hline
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000441.png & mittelmäßig \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000121.png &  gut \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000821.png &  gut\\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000621.png & schlecht  \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000781.png & gut  \\
+\end{tabular}
+\\ 
+
+\noindent
+\begin{figure}[h]
+    \subfigure[00000441.png]{\includegraphics[width=0.19\textwidth]{441}}
+    \subfigure[00000121.png]{\includegraphics[width=0.19\textwidth]{121}}
+\subfigure[00000821.png]{\includegraphics[width=0.19\textwidth]{821}}
+\subfigure[00000621.png]{\includegraphics[width=0.19\textwidth]{621}}
+\subfigure[00000781]{\includegraphics[width=0.19\textwidth]{781}}
+\caption{Qualitätsvergleich Miitelpunkt-Markierungen}
+\end{figure}
+\newpage
+\noindent
+\textbf {00000441.png:}
+\\
+
+\noindent
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{441}
+  \caption{00000441.png }
+\end{figure}
+\noindent
+\\
+
+\noindent
+Auf dieser Abbildung 34\footnote{BOSCH Engineering(20-05-2020) siehe~\cite{0520}} wird deutlich, dass die Punkte, welche genau im gleichen Abstand gesetzt wurden, die Schienen dadurch nicht zuverlässig abbilden können. Es fehlen in den Kurven weitere Punkte, damit der Verlkauf der Schienen in diesem Bereichen getroffen wird. Jedoch ist die Einstellung der Kamera-Matrix gut. Um qualitativ hochwertige Trainings-Daten zu erhalten, müssten in diesem Bild mindestens vier weitere Punkte (Anfang, Ende und zwei in den Kurven) gesetzt werden. So kann das Bild als mittelmäßig eingestuft werden und sollte für das Training eines Netzwerkes nicht verwendet werden.
+\\
+
+\noindent
+\newpage
+\textbf {00000121.png:}
+\\
+
+\noindent
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{121}
+  \caption{00000121.png}
+\end{figure}
+
+\noindent
+Dieses Bild\footnote{BOSCH Engineering(20-05-2020) siehe~\cite{0520}} zeigt, dass Szenen ohne Bodenunebenheiten durchaus semi-automatisch aus den Mittelpunkt-Dateien generiert werden können. Da die Schiene hier nur einen leichten Bogen schlägt, kann auch trotz der wenigen Punkte auf der Schiene diese gut abgebildet werden. Zwischen dem dritten und vierten Punkte kommt es zu einer kleiner Verschiebung auf der Schiene, welche jedoch sehr einfach durch das Löschen des vierten Punktes ausgeglichen werden kann. Die Kamera-Matrix funktioniert hier wie erwartet und die Qualität ist allgemein gut.
+\\
+
+\noindent
+\newpage
+\textbf {00000821.png:}
+\\
+
+\noindent
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{821}
+  \caption{00000821.png}
+\end{figure}
+
+\noindent
+Auch diese Abbildung\footnote{BOSCH Engineering(20-05-2020) siehe~\cite{0520}} zeigt ein gutes Ergebnis, da die Markierungen gut auf die Schiene abbilden. Die Kamera-Matrix funktioniert gut und gibt keine großen Abweichungen. Lediglich der erste und der letzte Punkt müssen auch in diesem Bild gesetzt werden, da die Mittelpunkte erst ab der ersten Equidistant-Linie gesetzt wurden. Auch dieses Label ist als gut anzusehen.
+\\
+
+\noindent
+\newpage
+\textbf {00000621.png:}
+\\
+
+\noindent
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{621}
+  \caption{00000821.png}
+\end{figure}
+
+\noindent
+Diese Situation in Abbildung 37\footnote{BOSCH Engineering(20-05-2020) siehe~\cite{0520}} zeigt deutlich, dass die Kamera-Matrix in diesem Bild nicht korrekt war. Der Zug fährt in diesem Bild den Berg hoch und dadurch kommt es zu einer Verschiebung der Perspektive. Da die Markierung schon ab Punkt zwei nicht mehr auf den Schienen ist, kann dieses Bild als unbrauchbar bewertet werden.
+\\
+
+\noindent
+\newpage
+\textbf {[00000621.png:}
+\\
+
+\noindent
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{781}
+  \caption{00000781.png}
+\end{figure}
+
+\noindent
+Dieses Bild\footnote{BOSCH Engineering(20-05-2020) siehe~\cite{0520}} zeigt wieder ein positiv-Beispiel. Die Markierungen bilden gut auf die Schiene ab und die Kamera-Matrix verhält sich wie gewünscht. Das einzige Problem sind hier wieder der Anfangs- und Endpunkte, welche durch den Catmull-Rom nicht berücksichtigt werden. Hier muss nachgebessert werden, dass sowohl der erste, als auch der letzte Punkt im Vektor ein zweites mal, jedoch um einen Pixel in der y-Achse verschoben, gespeichert wird. Dadurch kann dieses Problem verhindert werden. Insgesamt kann dieses Bild jedoch als gut eingeschätzt werden.
+\\
+
+\noindent
+\textbf{Fazit:}
+\noindent
+Bei genauerer Betrachtung wird deutlich, dass besonders in Bildern in denen die Kamera-Matrix aufgrund einer Bodenerhöhung verschoben ist, die generierten Markierungen nicht korrekt auf die Schiene Abbilden. Dies wird besonders in Bild 00000621.png deutlich. In diesem Bild fährt der Zug einen Berg hoch und dadurch verändert sich der Nickwinkel, sodass die Berechnung der Markierungen nicht mehr korrekt ist. Um dies auszugleichen wurde experimentell eine Funktion implementiert, womit der Nickwinkel der Kamera-Matrix verändert werden kann. Da es sich jedoch bei den existierenden Mittelpunkt-Daten um Punkte handelt, welche immer den gleichen Abstand haben, können besonders Kurven oft nicht genau dargestellt werden. Dort ist es besonders wichtig mehrere Punkte in kleinem Abstand zu setzen, damit die Markierung korrekt auf die Schienen abbildet. Dieses Problem kann gelöst werden, indem weitere Punkte in den Kurven gesetzt werden. Weiterhin fällt auf, dass die Markierung der Schiene erst auf der ersten Linie der Equidistant-Linien anfangen. Um dies auszugleichen müssen neue Anfangspunkte am Anfang der Schiene gesetzt werden. Auch Endpunkte müssen gesetzt werden, da der Catmull-Rom Spline immer den letzten Punkt als Stützpunkt verwendet. Als Ergebnis kann hier festgehalten werden, dass die Marikierungsgenerierung stark von der Genauigkeit der Kamera-Matrix abhängen. Die existierenden Mittelpunkte eignen sich hier nur bedingt, weshalb eine Verwendung abgewogen werden muss, da oft viele weitere Punkte gesetzt werden müssen, sodass die Zeitersparnis im Vergleich zum Neumarkieren der Schiene sehr gering ist.
+
+\subsection{Segmentationslabel Generierung}
+\label{sec:Segmentationslabel Generierung}
+
+
+\textbf{Zeitaufwand:}
+\\
+
+\noindent
+Um den Zeitaufwand abzuschätzen, wurde eine Funktion implementiert, welche die Zeit nimmt, die benötigt wird um ein Bild zu markieren. Danach soll im direkten Vergleich ein repräsentatives Bild einerseits mit dem LabelTool, andererseits händisch gelabelt und dabei die Zeit gemessen werden. Besonders bei händischem Labeln kommt es sehr darauf an, wie viele Schienen im Bild vorhanden sind. Es wurden 10 Bilder ausgesucht, in denen jeweils zwei bis drei Schienen zu Markieren waren. 
+\\
+
+\noindent
+\begin{table}[h]
+\begin{tabular}{c|c|c}
+Name & Zeit &\\
+\hline
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000341.png &  1:37 min \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000501.png &  1:28 min\\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000841.png &  1:04 min \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000181.png &  0:56 min \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000641.png &  1:43 min  \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000021.png &  1:58 min \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000741.png &  1:26 min  \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000321.png &  1:52 min  \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000441.png &  1:38 min  \\
+lrc\_data\_20200520\_083044\_part\_2-1\_track-1-a.mp4\_00000401.png &  2:16 min  \\
+\end{tabular}
+\caption{Zeitmessung LabelTool Bilder dazu im Anhang}
+\end{table}
+
+\noindent
+Im Schnitt wurde zum Labeln eines Bildes 1:35min gebraucht, wobei jedoch darauf hingewiesen wird, dass der Benutzer entsprechend schnell gearbeitet hat und dieser Wert im Normalfall etwas höher ausfällt.
+\\
+
+\noindent
+Im nächsten Schritt soll nun ein Bild\footnote{BOSCH Engineering(20-05-2020) siehe~\cite{0520}} mit dem Programm und händisch gelabelt werden. Für den händischen Prozess wurde die WebApp CVAT ausgesucht, da sie besonders performant und benutzfreundlich eingeschätzt wurde. Um einen Vergleich ziehen zu können, soll auch hier ein Bild mit drei Schienen verwendet werden. Es wurde versucht ein möglichst einfaches Bild mit geraden Schienen zu wählen:
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{test}
+  \caption{\_camera\_LRC\_image\_raw.mp4\_9590.png}
+\end{figure}
+\begin{table}
+\begin{tabular}[h]{c|c|c}
+Schiene & Punkte CVAT & Punkte LabelTool \\
+\hline
+linke Schiene & 74 &  7\\
+Mittelschiene & 74 &  11\\
+rechte Schiene & 98 & 9\\
+\end{tabular}
+\caption{Gesetzte Punkte im Vergleich}
+\end{table}
+
+\noindent
+Es wird deutlich, dass mit dem LabelTool weniger Punkte gesetzt werden müssen, um eine Schiene markieren zu können. Da beide Schienen gleichzeitig markiert werden und das Schienenbett automatisch aus den jeweiligen Punkten des linken und rechten inneren Randes berechnet wird, ohne dass es wie in CVAT extra markiert werden muss, kommt hier zu einer erheblichen Zeitersparnis. Der größte Zeitaufwand des LabelTools bestand darin, die Messlinie zu justieren, da die Werte der Kamera-Matrix in diesem Bild durch die Bodenunebenheiten sehr ungenau waren. Es ist zu erwarten, dass in einem Bild ohne Unebenheiten die benötigte Zeit noch weiter reduziert werden kann. Das Markieren der drei Schienen in CVAT hat insgesamt 9:54 Minuten gedauert, wohingegen das Markieren mit dem LabelTool nur 2:30 Minuten in Anrspruch genommen hat. Im nächsten Abschnitt soll die Qualität der Label gegenüberstellt werden.
+\\
+
+\noindent
+\textbf{Qualität der Label:}
+\\
+
+\noindent
+\begin{figure}[h]
+    \subfigure[LabelTool]{\includegraphics[width=0.49\textwidth]{label1}}
+    \subfigure[CVAT]{\includegraphics[width=0.49\textwidth]{label2}}
+\caption{Qualitätsvergleich beider Label}
+\end{figure}
+\\
+
+\noindent
+Im direkt Qualitätsvergleich wird deutlich, dass sich beide Label kaum unterscheiden. Beide bilden sehr genau auf die Schienen ab und man könnte sagen, dass das vom LabelTool generierte Label etwas rundere Kanten aufweistt. So wirkt das CVAT-Label inm den kurven teilweise eckig, was durch das manuelle Setzen der Punkte entsteht. Um dort eine noch höhere Präzision zu erreichen, hätte noch mehr Zeit investiert werden müssen. Des weiteren wurde ein Bild gewählt, welches für das händische Labeln gut geeignet ist, da hauptsächlich gerade Schienen abgebildet sind. In einem Bild mit mehr Kurven wäre der zeitliche Unterschied noch deutlicher geworden. Es kann festgehalten werden, dass das LabelTool insgesamt qualitativ hochwertige Label mit einem deutlich geringeren Zeitaufwand erstellen kann.
+\\
+
+\noindent
+\textbf{Vektorpolygone für Drittanbieter:}
+\\
+
+\noindent
+Zu den Segmentierungsinformationen gehören, neben den Pixelmasken und Ground Truth Daten, auch die Vektorpolygone, welche vom Drittanbieter eingelesen werden sollen. Für das Programm wurde der Drittanbieter makesense.ai und das COCO-Format gewählt. Nach dem laden des Bildes in die WebApp besteht die Möglichkeit über \textit{import annotations} die Vektor-Datei per \textit{drag} and drop in die WebApp zu laden. Die Markierungen werden automatisch angezeigt.
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{vektorpolygon}
+  \caption{Polygonvektor in makesense.ai}
+\end{figure}
+
+\noindent
+Wie auf dem Bild zu sehen ist, werden die Markierungen korrekt in der WebApp angezeigt. Sowohl die Schienenmarkierungen, als auch die verschiedenen Klassen werden korrekt erstellt. Die Markierungen können nun problemlos um weitere Klassen erweitert werden.
+\\
+
+\noindent
+\textbf{Ground Truth Daten:}
+\\
+
+\noindent
+Für das Training eines neuronalen Netzwerks werden Ground Truth Daten benötigt, welche ein Bild Maschinen-verständlich darstellen. Diese Daten werden von Herrn Florian Hofstetter für seine Masterarbeit benötigt. Wie in Kapitel 2 beschrieben wird ein Grayscale-Bild erstellt, welches die Klasseninteger in den Pixeln trägt. Auch diese Anforderung erfüllt das LabelTool korrekt.
+\begin{figure}[H]
+  \includegraphics[width=1\textwidth]{groundtruth}
+  \caption{Ground Truth Daten des Beispiels}
+\end{figure}

@@ -1,0 +1,695 @@
+# by pts@fazekas.hu at Fri Mar 27 22:37:48 CET 2009
+
+* doc: pdfsizeopt --stats
+* doc: to do just the serialization improvements: pdfsizeopt --use-multivalent=no --do-optimize-objs=no --do-remove-generational-objs=no --do-optimize-images=no --do-optimize-fonts=no --do-decompress-most-streams=yes --do-optimize-obj-heads=yes --do-generate-object-stream=yes --do-generate-xref-stream=yes
+* gs -sDEVICE=pdfwrite can do Type1C font embedding --> great reduction for small PDFs
+* PDF tools including compression:
+  http://multivalent.sourceforge.net/Tools/index.html
+  old (2006-01-02)
+  -max and -compact can only be read by Mulivalent tools
+    bzip2, very small; file format details:
+    http://multivalent.sourceforge.net/Research/CompactPDF.html
+    white paper (2003) http://portal.acm.org/citation.cfm?id=958220.958253
+  ?? does it recompress images?
+  converts fn.pdf to fn-o.pdf  (makes it much smaller)
+  SUXX: java -cp Multivalent.jar tool.pdf.Compress texbook.9.2.pdf
+  texbook.9.2.pdf: java.lang.ArrayIndexOutOfBoundsException: 1820
+  * good idea to compress fn.9.0.pdf to fn.9.0-o.pdf, to PDF1.5 with object
+    compression
+* is there a tool for Type1C (CFF) font conversion in PDF?
+* Ubuntu Hardy has latest pdftk 1.41
+  pdftk texbook.9.0.pdf output texbook.9.0.tk.pdf compress
+  only compresses the page stream a little bit
+* http://www.egregorion.net/servicemenu-pdf/
+  various operations on PDf
+* concatenation requires gs (\cite my eurotex2007 article with .ps hack)
+* -dPDFSETTINGS=/printer : embed all fonts (see docs at http://pages.cs.wisc.edu/~ghost/doc/cvs/Ps2pdf.htm)
+* pdftex type1c http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=424404
+* http://www.adobe.com/devnet/acrobat/pdfs/pdf_reference_1-7.pdf
+* TODO: how \pdfcompresslevel affects the effectiveness of Multivalent?
+* TODO: how to recompress inline images? What is the sam2p default?
+* TODO: does Multivalent recompress images? try...
+* TODO: do sam2p-produced inline images remain inline images with pdftex,
+  without recompression? [unchanged, kept RLE by pdftex] what if Multivalent?
+  [unchanged, kept RLE by Multivalent]
+  pdftex doesn't recompress or change BitsPerComponent, colorspace, filter etc.
+  of /XObject
+  multivalent doesn't change the BitsPerComponent or colorspace, but it
+  changes the filter from none or RLE to /FlateDecode (TODO: what about LZW or
+  fax?), but it keeps /DCTDecode.
+  SUXX: TODO: multivalent is buggy, it removes the whole /DecodeParms,
+  including the /Predictor, but it doesn't
+  reencode the image; it also removes an unknown /Filter/FooDecode
+* TODO: experiment with PNG and TIFF predictors -- will we gain size by
+  default? or should the user do it?
+* TODO: use standard PNG tools (or pnmtopng -- does it optimize? yes, it
+  seems to find out number of bits; creates PNG smaller than sam2p) if
+  available to achieve superior (?) compression
+* doc: which version of pdftex used and why?
+* TODO: how to fix images after reencoding with gs -sDEVICE=pdfwrite?
+  (use my Perl script?)
+* (from pnmtopng.c)
+  PNG allows only depths of 8 and 16 for a truecolor image
+  and for a grayscale image with an alpha channel.
+* create small PNG: png_create_write_struct (PNG_LIBPNG_VER_STRING,
+  &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
+* similar to sam2p (EPS and PDF output): http://bmeps.sf.net/
+* TODO: first RLEEncode, then FlateEncode
+* doc: pdfconcat (does it keep hyperlinks? does anything keep hyperlinks?
+  document our gs script: lme2006/art/02typeset/pdfconcatlinks.ps)
+* lme2006 was latex + dvips + gs -sDEVICE=pdfwrite
+* eurotex2006 was pdflatex + pdfconcat
+* doc: converting large images needs lots of memory (for tool.pdf.Compress,
+  the image stream must fit to memory)
+* png2pdf 1.0.12: 2006-07-11
+* TODO: meps.sf.net png2pdf.net: does it decompress PNG? Yes.
+* http://en.wikipedia.org/wiki/Portable_Network_Graphics
+  The current version of IrfanView can use PNGOUT as an external plug-in,
+  obviating the need for a separate compressor.
+* However, IrfanView doesn't support transparency, so the image compression
+  with IrfanView isn't guaranteed to be lossless. There is also a freeware GUI
+  frontend to PNGOUT known as PNGGauntlet.
+* pngout.exe is not open source; 11/20/2008
+  * amazingly small: 11/20/2008 version: 40960 bytes
+  * has variouse flags tuning speed and compression parameters
+  * description of flags: http://advsys.net/ken/util/pngout.htm
+  out of memory for very large images: lme_v6/00001.png: PNG image data, 17382 x 23547, 1-bit grayscale, non-interlaced
+  very slow:
+  $ file lme_v6/600dpi_00001.png
+  lme_v6/600dpi_00001.png: PNG image data, 5794 x 7849, 1-bit grayscale, non-interlaced
+  $ time wine ./pngout.exe lme_v6/600dpi_00001{,.pngout}.png
+  In:   78862 bytes               lme_v6/600dpi_00001.png /c0 /f0 /d1
+  Out:                             lme_v6/600dpi_00001.pngout.png /c3 /f0 /d1, 2 c
+  Out:   54135 bytes
+  Chg:  -24727 bytes ( 68% of original)
+  real	6m48.734s
+  user	6m32.473s
+  sys	0m2.480s
+  old linux version available (20070430)
+  http://static.jonof.id.au/dl/kenutils/pngout-20070430-linux-static.tar.gz
+  only free to use: http://www.advsys.net/ken/utils.htm#pngoutkziplicense
+  * seems to do color space conversion
+  $ time ./pngout-linux-pentium4-static lme_v6/300dpi_00001.rgb8{,.pngout}.png
+  In:34118768 bytes               lme_v6/300dpi_00001.rgb8.png /c2 /f0
+  Out:                            lme_v6/300dpi_00001.rgb8.pngout.png /c3 /f0 /d1
+  Out:   19817 bytes
+  Chg:-34098951 bytes (  0% of original)
+  real	0m47.100s
+  user	0m46.803s
+  sys	0m0.248s
+  $ time ./pngout-linux-pentium4-static lme_v6/300dpi_00008{,.pngout}.png
+  In:  124462 bytes               lme_v6/300dpi_00008.png /c0 /f0 /d1
+  Out:                             lme_v6/300dpi_00008.pngout.png /c3 /f0 /d1, 2 c
+  Out:  107256 bytes
+  Chg:  -17206 bytes ( 86% of original)
+  real	0m58.512s
+  user	0m58.192s
+  sys	0m0.244s
+  $ time sam2p -pdf:2 lme_v6/00008.png lme_v6/00008.sam2p.pdf
+  This is sam2p v0.45-3.
+  Available Loaders: PS PDF JAI PNG JPEG TIFF PNM BMP GIF LBM XPM PCX TGA.
+  Available Appliers: XWD Meta Empty BMP PNG TIFF6 TIFF6-JAI JPEG-JAI JPEG PNM
+  GIF89a+LZW XPM PSL1C PSL23+PDF PSL2+PDF-JAI P-TrOpBb.
+  sam2p: Notice: PNM: loaded alpha, but no transparent pixels
+  sam2p: Notice: job: read InputFile: lme_v6/00008.png
+  sam2p: Notice: writeTTT: using template: p02
+  sam2p: Notice: applyProfile: applied OutputRule #4
+  sam2p: Notice: job: written OutputFile: lme_v6/00008.sam2p.pdf
+  Success.
+  real	1m16.780s
+  user	1m9.492s
+  sys	0m6.632s
+  $ time java -cp Multivalent.jar tool.pdf.Compress lme_v6/00008.sam2p.pdf
+  file:/home/kat/mix/trunk/pdfsize/lme_v6/00008.sam2p.pdf, 1419665 bytes
+  additional compression may be possible with:
+           -compact -jpeg
+  => new length = 1246436, saved 12%, elapsed time = 13 sec
+  real	0m14.039s
+  user	0m13.705s
+  sys	0m0.356s
+  $ time ./optipng lme_v6/00008.optipng.png
+  OptiPNG 0.6.2: Advanced PNG optimizer.
+  Copyright (C) 2001-2008 Cosmin Truta.
+  ** Processing: lme_v6/00008.optipng.png
+  17382x23547 pixels, 1 bit/pixel, grayscale
+  Input IDAT size = 1371588 bytes
+  Input file size = 1373711 bytes
+  Trying:
+    zc = 9  zm = 8  zs = 0  f = 0		IDAT size = 1246754
+    zc = 9  zm = 8  zs = 1  f = 0		IDAT size = 1241149
+    zc = 9  zm = 8  zs = 0  f = 5		IDAT size = 1090056
+    zc = 9  zm = 8  zs = 1  f = 5		IDAT size = 1085643
+  Selecting parameters:
+    zc = 9  zm = 8  zs = 1  f = 5		IDAT size = 1085643
+  Output IDAT size = 1085643 bytes (285945 bytes decrease)
+  Output file size = 1085762 bytes (287949 bytes = 21.02% decrease)
+  real	2m28.465s
+  user	2m27.521s
+  sys	0m0.560s
+  * optipng uses very little memory (50M for 00008.png), it doesn't read the
+    whole PNG input image to memory.
+* OptiPNG is a PNG optimizer that recompresses image files to a smaller
+  size, without losing any information. This program also converts external
+  formats (BMP, GIF, PNM and TIFF) to optimized PNG, and performs PNG
+  integrity checks and corrections.
+  If you wish to learn how PNG optimization is done, or to know about other
+  similar tools, read the PNG-Tech article "A guide to PNG optimization".
+  (optipng is a redesign of pngcrush)
+  * At the time of this writing, AdvPNG does not perform image reductions,
+    so the use of pngrewrite or OptiPNG prior to optimiziation may be
+    necessary. However, given the effectivenes of 7-Zip deflation, AdvanceCOMP
+    is a powerful contender.
+  * contains minitiff.c and tiffread.c for reading TIFF files
+  * can process large images: 17382x23547 pixels, 1 bit/pixel, grayscale
+* Latest version: OptiPNG 0.6.2 (released on 9 Nov 2008).
+* SUXX: advpng in advancecomp-1.15 doesn't support 1-bit grayscale
+  lme_v6/300dpi_00008.advpng-4.png (Unsupported bit depth/color type, 1/0)
+* ultimate data compression comparison: http://uclc.info/
+  TODO: Google, includes PAQ: slow, but emits small file
+* TODO: unused palette color optimization for PDF images
+  (pngout does it, optipng doesn't do it)
+* TODO: convert-indexed-to-grayscale optimization for PDF images
+  (pngout or optipng doesn't do it, optipng doesn't do it)
+* TODO: single-color image optimization
+* TODO: How to optimize a PDF image object
+  TODO: doc: dependencies: Ghostscript, sam2p, pngtopnm, pngout, jbig2
+  0. Let the original PDF XImage object be orig.pdfimg .
+  1. Create v0.pdfimg from orig.pdfimg by keeping only /Width, /Height,
+     /ColorSpace, /BitsPerComponent, /Filter and /DecodeParms and the
+     compressed stream. Convert ``/ImageMask true'' to /ColorSpace /DeviceGray.
+  2. If the /Filter contains /JPXDecode or /DCTDecode, then
+     stop and use v0.pdfimg . (Imp: eliminate /ASCIIHexDecode and
+     /ASCII85Decode, also later)
+  3. If /ColorSpace is not /DeviceRGB, /DeviceGray or /Indexed of /DeviceRGB
+     or /DeviceGray, then stop and use v0.pdfimg . (Imp: /DeviceCMYK, but
+     PNG has no support for this).
+  4. If /BitsPerComponent is greater than 8, then stop and use v0.pdfimg .
+  5. If /Mask is present and it's nonempty, then stop and use v0.pdfimg
+     (Imp: easy support for non-indexed /DeviceRGB and /DeviceGray: convert
+     the /Mask to RGB8, remove it, and add it back (properly converted back) to
+     the final PDF; pay attention to /Decode differences as well.)
+  6. Render v0.pdfimg with Ghostscript to -sDEVICE=ppmraw,
+     ``/Interpolate false''
+     (or -sDEVICE=pgmraw if /DeviceGray or /Indexed/DeviceGray)
+     (Imp: maybe -sDEVICE=pdfwrite with
+     the appropriate setpagedevice to produce something uncompressed that
+     sam2p understands directly.)
+  7. Convert the rendered PNM with sam2p to PDF XObject (-pdf:2 PDF1.2:).
+     Use the -s option to prevent the creation of a single-color image
+     without an image XObject.
+     sam2p by default does:
+     * removing unused colors from the palette
+     * picking the smallest /ColorSpace and /BitsPerComponent (== SampleFormat)
+     * using ZIP compression (/FlateDecode)
+     (Imp: improve the /FlateDecode predictor selection algorithm of sam2p)
+  8. Extract the image XObject from the PDF created by sam2p to v1.pdfimg .
+  9. Convert the rendered PNM with sam2p to PNG. (Imp: optimize with
+     SampleFormat RGB1, RGB2 and RGB4) (Imp: if BitsPerComponent is not 8,
+     do an alternate conversion, specifing only 8-bit SampleFormats)
+  10. Use pngout (or optipng, if pdfout is not available). (Imp: with some
+      flags: optipng -o5) (Imp: use pnmtopng, which creates a little bit
+      smaller PNG than sam2p because it chooses better predictors)
+      (Imp: for some very large images (what is the limit?), pdfout runs out
+      of memory (malloc fails) -- prevent that, and use optipng)
+  11. Extract the new /Width, /Height, /ColorSpace and /BitsPerComponent
+      values from the PNG header, and the palette from the PNG PLTE chunk.
+  12. Create v2.pdfimg from v0.pdfimg by replacing /Width, /Height,
+      /ColorSpace and /BitsPerComponent from the values extracted above,
+      adding the corresponding PNG /DecodeParms, /Filter /FlateDecode and
+      replacing the image stream with the contents of the PNG IDAT chunk.
+      (Imp: experiment size reduction with /DecodeParms and image data being
+      out of sync.) This operation is fast, because no recoding or
+      recompression takes place.
+  13. If /BitsPerComponent is 1, create v3.pdfimg from sam2p's PNG output
+      and converting it to /JBIG2Decode using the open source `jbig2' tool.
+  14. Pick the smallest of v*.pdfimg created above.
+  15. If not v0.pdfimg was picked, then create the output by taking
+      orig.pdfimg and replacing /ColorSpace, /BitsPerComponent,
+      /DecodeParms, /Filter and the image stream. Verify that /Width and
+      /Height of orig.pdf and the v*.pdfimg picked match. Pay attention to
+      changed /Decode values, and /ImageMask and palette conversions.
+      (Imp: apply the /Mask color interval, if appropriate.)
+  +16. Find identical images in the PDF file, and unify them.
+  +17. Find identical palettes and move them to an object.
+* TODO: prevent tool.pdf.Compress from decompressing, and/or recompressing
+  the image XObjects we have created
+* doc: none of the tools optimize inline images (TODO?), so please don't use
+  sam2p (by default) to embed them, use sam2p -pdf:2 to create image
+  XObjects.
+* TODO: measure PNG/PDF image size reduction compared to tool.pdf.Compress
+* http://prdownloads.sourceforge.net/libpng/libpng-1.2.16.tar.bz2
+* pngwutil.c
+  png_write_find_filter  (finds a filter for the current row)
+    The prediction method we use is to find which method provides the
+    smallest value when summing the absolute values of the distances
+    from zero, using anything >= 128 as negative numbers.  This is known
+    as the "minimum sum of absolute differences" heuristic.  Other
+    heuristics are the "weighted minimum sum of absolute differences"
+    (experimental and can in theory improve compression), and the "zlib
+    predictive" method (not implemented yet), which does test compressions
+    of lines using different filter methods, and then chooses the
+    (series of) filter(s) that give minimum compressed data size (VERY
+    computationally expensive).
+* gs -sDEVICE=ppmraw doesn't change any pixel value
+* TODO: sam2p /Filter array ==> /DecodeParams should be a similar array
+* TODO: why is the sam2p predictor consistently larger than the nonpredictor
+  in lme_v6/300dpi_all.pdf ?
+* ./type1cconv.py lme_v6/empty_page.pdf
+info: optimized image XObject 1 best_method=4 file_name=type1cconv-1.pngout.png  size=20000 (63%)
+info: replacements are {1: 71448, 2: 25368, 3: 25943, 4: 20000} <= 31827 bytes
+info: optimized image XObject 6 best_method=4 file_name=type1cconv-6.pngout.png  size=30453 (73%)
+info: replacements are {1: 92313, 2: 36256, 3: 37044, 4: 30453} <= 41589 bytes
+info: optimized image XObject 10 best_method=4 file_name=type1cconv-10.pngout.png  size=62584 (80%)
+info: replacements are {1: 145040, 2: 71281, 3: 71123, 4: 62584} <= 77822 bytes
+info: optimized image XObject 14 best_method=4 file_name=type1cconv-14.pngout.png  size=15611 (62%)
+info: replacements are {1: 63576, 2: 20613, 3: 20514, 4: 15611} <= 25030 bytes
+info: optimized image XObject 18 best_method=4 file_name=type1cconv-18.pngout.png  size=37037 (76%)
+info: replacements are {1: 98083, 2: 43685, 3: 42789, 4: 37037} <= 48694 bytes
+info: optimized image XObject 22 best_method=4 file_name=type1cconv-22.pngout.png  size=1668 (19%)
+info: replacements are {1: 42650, 2: 5052, 3: 5090, 4: 1668} <= 8614 bytes
+info: optimized image XObject 26 best_method=4 file_name=type1cconv-26.pngout.png  size=76605 (82%)
+info: replacements are {1: 161343, 2: 85964, 3: 84647, 4: 76605} <= 92913 bytes
+info: optimized image XObject 31 best_method=4 file_name=type1cconv-31.pngout.png  size=105073 (84%)
+info: replacements are {1: 204348, 2: 116765, 3: 114193, 4: 105073} <= 124411 bytes
+info: optimized image XObject 35 best_method=4 file_name=type1cconv-35.pngout.png  size=72229 (82%)
+info: replacements are {1: 154129, 2: 81512, 3: 80321, 4: 72229} <= 87722 bytes
+info: optimized image XObject 39 best_method=4 file_name=type1cconv-39.pngout.png  size=77050 (83%)
+info: replacements are {1: 236762, 2: 84980, 3: 99845, 4: 77050} <= 92476 bytes
+...
+info: optimized image XObject 72 best_method=4 file_name=type1cconv-72.pngout.png  size=73335 (82%)
+info: replacements are {1: 173074, 2: 82009, 3: 84978, 4: 73335} <= 89180 bytes
+info: optimized image XObject 76 best_method=4 file_name=type1cconv-76.pngout.png  size=45594 (78%)
+info: replacements are {1: 115776, 2: 52471, 3: 52603, 4: 45594} <= 58737 bytes
+info: optimized image XObject 81 best_method=4 file_name=type1cconv-81.pngout.png  size=87807 (83%)
+info: replacements are {1: 177788, 2: 97827, 3: 96149, 4: 87807} <= 105321 bytes
+info: optimized image XObject 85 best_method=4 file_name=type1cconv-85.pngout.png  size=104283 (85%)
+info: replacements are {1: 204822, 2: 115707, 3: 112802, 4: 104283} <= 123369 bytes
+info: optimized image XObject 89 best_method=4 file_name=type1cconv-89.pngout.png  size=61667 (81%)
+info: replacements are {1: 141101, 2: 69353, 3: 69315, 4: 61667} <= 75941 bytes
+info: saving PDF to: lme_v6/300dpi_all.type1c.pdf
+info: generated 1420015 bytes (82%)
+real	40m7.868s
+user	38m45.777s
+sys	0m42.015s
+* TODO: tool.pdf.Compress increases the image size
+$ java -cp Multivalent.jar tool.pdf.Compress lme_v6/300dpi_all.type1c.pdf
+file:/home/kat/mix/trunk/pdfsize/lme_v6/300dpi_all.type1c.pdf, 1420015 bytes
+PDF 1.1, producer=pdfTeX-1.40.3, creator=TeX
+additional compression may be possible with:
+	 -compact -jpeg
+=> new length = 1543091, saved -8%, elapsed time = 7 sec
+* TODO: get rid of unreachable objects
+* TODO: renumber existing objects to gain xref space
+* CFF (Compact Font Format):
+  Adobe Tech. Note 5176, The CFF (Compact Font Format) Spec., (PDF: 251 KB)
+  http://partners.adobe.com/public/developer/en/font/5176.CFF.pdf
+  Adobe Tech. Note 5177, Type 2 Charstring Format (PDF: 212 KB)
+  http://partners.adobe.com/public/developer/en/font/5177.Type2.pdf
+* TODO: embed all fonts (especially base 14); or unembed; which Adobe Reader
+  is affected?
+* PDF/X-3: Specify -sProcessColorModel=DeviceGray or
+  -sProcessColorModel=DeviceCMYK  (DeviceRGB is not allowed).
+  (same applies to PDF/A)
+* TODO: use /JBIG2Encode for image compression
+* gs 8.61 has /JBIG2Decode, but not /JBIG2Encode
+* TODO: unify fonts (gs 6.51 -sDEVICE=pdfwrite doesn't do this, keeps two
+  /Subtype/Type1C objs in the font dict)
+  * TODO: ignore small mismatches in gs' /Type1C output:
+    /BlueScale, /BlueShift, /ForceBold
+  * use pdftops to convert /Type1C output of gs back to Type1.
+* TODO: unify identical images
+  * not much gain with pdftex's output since pdflatex \includegraphics does
+    this automatically
+  * Multivalent unifies byte-to-byte identical images (``dups''), but
+    doesn't bother finding indentically looking images.
+  * Multivalent seems to find and eliminate identical subtrees (or just
+    content streams??)
+    $ java -cp Multivalent.jar tool.pdf.Compress -mon eurotex2006.final.mul5.pdf
+    file:/home/kat/pdfsizeopt/trunk/eurotex2006.final.mul5.pdf, 42027405 bytes
+    PDF 1.4, producer=pdfeTeX-1.21a, creator=TeX
+    11172 objects / 630 pages pre955 pre1311 pre955 pre1311 pre955 pre1311
+    pre955 pre1311 pre955 pre1311, 1540 LZW, 435 /Length IRef, 70 raw samples =
+    46374K, 875 embedded Type 1 = 0K, liftPageTree, inline 468, 4881 dups + 1440
+    + 1332 + 500 + 124 + 40 + 20
+    (divides final file size by 5)
+    TODO: what do thos ``embedded Type 1'', ``inline'' etc. mean?
+    TODO: what about bookmarks?
+* TODO: doc: ghostscript to-/Type1C conversion eliminates subrs; usually no
+  problem because /A and /Aacute are nearby, /FlateEncode catches it
+* /Filter [ /ASCIIHexDecode /JBIG2Decode ]
+  /DecodeParms [ null << /JBIG2Globals 6 0 R >> ]
+* when should we /FlateEncode?
+  if(fcompress_ && dict.get("Filter") == null && dict.get("Length")
+  == null && abyte0.length > FLATE_OVERHEAD + 25)
+* JVM .class file format
+  http://java.sun.com/docs/books/jvms/second_edition/html/Instructions.doc.html
+  http://java.sun.com/docs/books/jvms/second_edition/html/ClassFile.doc.html
+  http://java.sun.com/docs/books/jvms/second_edition/html/VMSpecTOC.doc.html
+  Javassist to mangle the .class file
+  cmp -l myload/Foo.class.{privatewho,publicwho}
+  229   private:2   public:1
+  292 invokespecial:267 invokevirtual:266
+* !! why is Comprepp better than Compress on some images (not on
+  pts2ep.type1c.pdf anymore?)
+* how to edit java code
+  * how to disassemble (without offsets)
+    javap -c -private tool/pdf/Compress | less
+  * how to public recodeImage()
+    private --> public: \x00\x02\x02\x79 --> \x00\x01\x02\x79
+        (private is \x00\x02)
+    invokespecial --> invokevirtual: \x2b\x2c\xb7 --> \x2b\x2c\xb6
+        (aload_1 is \x2b, aload_2 is \x2c, invokespecial is \xb7)
+  * how to public compress()
+    invokespecial --> invokevirtual:
+        \xb7\x00\x2e\xb7\x00\x2f --> \xb7\x00\x2e\xb6\x00\x2f
+        (invokespecial is \xb7, but we change only the 2nd one (``compress''))
+    private --> public:
+      ../jdisasm.py tool/pdf/Compress.class private compress
+  * how to fix pdfr_;
+    private --> public: \x00\x02\x02\x3b --> \x00\x01\x02\x3b
+* http://websiteoptimization.com/speed/tweak/pdf/
+  uses Advanced / PDF optimizer in Acrobat 8
+  uses PDF Enhancer 3.1 (server edition: pdfe) from Apago as well (Windows, Linux, Mac OS X etc.)
+    features: http://www.apagoinc.com/prod_feat.php?feat_id=30&feat_disp_order=7&prod_id=2
+    good: Linux command-line version also available
+    good: extra reduction (see lme_v6.pdf) by applying pdfe first, then
+      pdfsizeopt.py (then with Multivalent.jar)
+    good: doesn't degrade quality by default
+    good: highly configurable (even for lossy)
+    good: can concatenate and split as well
+    SUXX: not open source, needs payment
+    SUXX: useless error message:
+     An error has occurred:  expected a dictionary object
+  other software: PDF Shrink http://www.apagoinc.com/prod_home.php?prod_id=30
+* how to find embedded glyphs in PDF:
+  pdftops type1cconv.tmp.pdf - | perl -ne 'if (/^currentfile eexec$/) { die
+  if $N; $N=1 } elsif (/^cleartomark/) { $N=2 } elsif ($N==1) { print }' |
+  EexecDecode | perl -ne 'print"$1\n" if m@^(/\S+) \d+ RD @' | sort
+* Ghostscript load CFF Type1C font: /MY (t.bin) (r) file /FontSetInit /ProcSet findresource /MY findfont {pop ===} forall
+* how to test images are not recompressed with MultivalentLoad:
+  $ java -cp Multivalent.jar tool.pdf.Compress pts2.lzw.pdf
+  $ grep /LZWEncode pts2.lzw-o.pdf
+  (no match because recompress)
+  $ java -ea MultivalentLoad Multivalent.jar tool.pdf.Comprepp pts2.lzw.pdf
+  $ grep /LZWEncode pts2.lzw-o.pdf
+  (matches)
+* font unification
+** good candidate for font unification:
+   grep -a FontName eurotex2006.final.type1c.pdf | grep GaramondNo8-Reg
+   grep -a BaseFont eurotex2006.final.type1c.pdf | grep GaramondNo8-Reg
+** TODO: investigate why CMR10 in eurotex2006.final.pdf is a bad candidate
+   why do we get a different /FontBBox in the FontDescriptor?
+   $ grep -a FontName eurotex2006.final.type1c.pdf | grep CMR10
+   <</Type/FontDescriptor/FontName/OHUJVM+CMR10/FontBBox[0 -22 813 716]/Flags 4/Ascent 716/CapHeight 716/Descent -22/ItalicAngle 0/StemV 121/MissingWidth 333/CharSet(/A/c/d/e/m/o/one/r/zero)/FontFile3 1422 0 R>>endobj
+   <</Type/FontDescriptor/FontName/IXTUXC+CMR10/FontBBox[0 -193 813 683]/Flags 4/Ascent 683/CapHeight 683/Descent -193/ItalicAngle 0/StemV 121/MissingWidth 333/CharSet(/F/P/c/comma/m/period/r)/FontFile3 1423 0 R>>endobj
+* another optimization: remove optional objects (done by Multivalent)
+* another optimization: convert some indirect references to direct (unless
+  the PDF spec forces indirect)
+* TODO: remove objects not needed for rendering:
+  /PTEX.Fullbanner (This is pdfeTeX using libpoppler, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) kpathsea version 3.5.4)
+* hyperref \ref and \pagegeref /Type/Annot; no direct /Page reference
+  (except for OpenAction --> Fit); all are /XYZ references
+* SUXX: hyperref sometimes refers to 1 page before (the \section at the top
+  of the page)
+* PDF annotation and outline target /Names must be in alphabetical order
+* TODO: how much do we save (after Multivalent.jar) if we don't have
+  outlines or bookmarks (hyperref)?
+* TODO: measure: how much font unification saves? (10K for GaramondNo8-Reg)
+* TODO: doc: Multivalent.jar /DecodeParms<</Predictor 12/Columns 5>> on
+  /Type/XRef
+* doc: font unification is useful after PDF concatenation and image
+  embedding
+* doc: acroread and gs 8 need /Encoding in /Font
+* doc: gs 8.54 cannot always display /JBIG2Decode properly (minitex.pdf);
+  --> upgrade to 8.61
+* doc: gs 8.54 cannot parse all xref; --> upgrade to 8.61
+* TODO: feature: run ./pdfe as first step pdfsizeopt.py
+* TODO: diagnose why ./pdfe cannot export eurotex2006-final.pdf
+  (even after conversion with Multivalent.jar, try single-page
+  /mnt/tardis/warez/tmp/pdfe.bad.pdf
+  error message: expected a dictionary object
+* TODO: further: PNG optimization
+  http://lyncd.com/2009/03/imgopt-lossless-optimize-png-jpeg/
+  shell script using jpegtran, optipng, advpng and pngout
+  http://lyncd.com/files/imgopt-0.1.2.tar.gz
+* \cite http://www.verypdf.com/pdfinfoeditor/compression.htm
+  pdfcompress comamnd-line tool
+  removemetadata=1
+  removejavascript=1
+  removethumb=1
+  removecomment=1
+  removeembeddedfile=1
+  removebookmarks=1
+  removeprivatedata=1
+  removenamesdestination=1
+  removeform=1
+  compressstream=1
+  all documented here: http://www.verypdf.com/pdfinfoeditor/pdfcompress.htm
+  Advanced PDF Tools v2.0; $38 USD for GUI, $79 for the command-line
+  Win32 only, works in Wine
+  it says This is trial version, it can only process first half of pages.
+* PDF 1.4 2001 JBIG2; Adobe Reader 5.0
+* PDF 1.5 2003 JPEG2000; linked multimedia; object streams;
+  cross reference streams; Adobe Reader 6.0
+* info: Advanced / Optimize PDF in Acrobat Pro 9 is quite slow
+  SUXX: An error was encountered while processing images
+  (when image transformations were disabled)
+* PDF Enhancer doesn't emit cross reference streams or object streams
+* PDF Enhancer the advanced server edition is older:
+    pdfenhancer version 3.2b2, Build Date Sep 15 2007, SPDF 1122r
+  than the server edition:
+    pdfenhancer version 3.2.5, Build Date Jun  4 2008, SPDF 1122r
+* TODO doc: how to make sure /Times is embedded
+* TODO group the objects in an object stream by type
+* TODO optimize: why is Multivalent alone better than
+* pdfsizeopt.py+Multivalent on pdf_reference_1-7.pdf?
+* TODO group the objects in an object stream by type
+* PDF allows obj{}s separated by \r instead of \n; e.g. pdfe creates such
+  objects
+* TODO: investigate uninflatable.fla created from pts2e.pdfe.pdf
+  GhostScript /FlateDecode can extract it, pdftops can display it, but
+  zlib with Python and Ruby give Z_BUF_ERROR.
+* ``pdfenhancer version 3.2.5, Build Date Jun  4 2008, SPDF 1122r'' creates
+  invalid images for pts2e.pdf as input.
+* TODO (album_virag.pdf): [/FlateDecode /CCITTFaxDecode]
+* TODO: is /FlateDecode/DCTDecode bettern than /DCTDecode?
+* TODO: don't compress too small images
+* dvipdfmx rounds glyph /Widths to integers, pdftex doesn't
+* !! BUGFIX: ../pdfsizeopt.py pts_pdfsizeopt20009_talk{,.psom}.pdf
+  duplicate font in GhostScript's output
+* TODO: document or detect: pdfsizeopt_big_font_bug{,.gs8.54}.pdf
+  works with gs 6
+* TODO: correctly skip CID fonts (latex-kr.pdf)
+* It fails to validate as PDF/A-1b (using acrobat 7.1.0 for the validation).
+  (need /ID)
+* WinArchiver can compress PDFs from 3451 MB to 2658 MB.
+* TODO: why does Type1C font generation break for data_cmhello.pdf
+  (sffb1000.pfb)?
+* about /PostScript in CFF:
+    These were found if cff.pgs:
+      '/FSType 0 def'
+      '/FSType 14 def'
+      '/FSType 4 def'
+      '/FSType 8 def'
+      '/OrigFontType /TrueType def'
+    5176.CFF.pdf says about /FSType and /OrigFontType:
+    When OpenType fonts are converted into CFF for embedding in
+    a document, the font embedding information specified by the
+    FSType bits, and the type of the original font, should be included
+    in the resulting file. (See Technical Note #5147: ``Font Embedding
+    Guidelines for Adobe Third-party Developers,'' for more
+    information.)
+
+    https://github.com/llimllib/personal_code/blob/master/python/ttf_parse/ttfparser.py
+    contains some /FSType bitmask values:
+
+      if fsType == 0:  print "0000 - Installable embedding"
+      if fsType & 0x0001: print "0001 - Reserved"
+      if fsType & 0x0002: print "0002 - Restricted license embedding (CANNOT EMBED)"
+      if fsType & 0x0004: print "0004 - Preview & print embedding"
+      if fsType & 0x0008: print "0008 - Editable embedding"
+      for i in range(4, 8): if fsType & (1 << i): print "%04X - Reserved" % (1 << i)
+      if fsType & 0x0100: print "0100 - No subsetting"
+      if fsType & 0x0200: print "0200 - Bitmap embeding only"
+
+    Also, when this generates CFF, it supports only /FSType and
+    /OrigFontType:
+    https://github.com/adobe-type-tools/afdko/blob/master/FDK/Tools/Programs/public/lib/source/cffwrite/cffwrite_dict.c
+* MuPDF is a lightweight PDF, XPS and CBZ viewer and parser/rendering library.
+  git clone http://mupdf.com/repos/mupdf.git
+  it contains all the PDF decoding filters
+* qpdf --decrypt ~/Downloads/pdf_reference_1-7.pdf ~/Downloads/pdf_reference_1-7.decrypted.pdf
+  ... invalid password
+  even qpdf.xstatic reports this
+  $ pdftk ~/Downloads/pdf_reference_1-7.pdf cat output ~/Downloads/pdf_reference_1-7.decrypted.pdf
+  WARNING: The creator of the input PDF:
+    /usr/local/google/home/pts/Downloads/pdf_reference_1-7.pdf
+     has set an owner password (which is not required to handle this PDF).
+     You did not supply this password. Please respect any copyright.
+
+--- JPEG:
+
+Tighter image formats with lossless coversion from and to JPEG:
+
+* packJPG
+  C++ program, version 2.5i is open source
+  http://www.matthiasstirner.com/
+  does not create JPEG files, has its own output format
+  average JPEG recompression ratio: -18%
+  -21% on 3072x2304 JPEG photos
+  ZIP gives -0.03% on JPEG
+
+Lossless JPEG optimization:
+
+* jpegtran -optimize
+  part of libjpeg
+  sudo apt-get install libjpeg-turbo-progs
+  also: mozjpegtran -revert -optimize
+* imgopt
+  Bash script, just calls `jpegtran -copy none -optimize' + jfifremove
+  https://github.com/kormoc/imgopt/blob/master/imgopt
+  https://github.com/kormoc/imgopt
+  old download no longer available: http://lyncd.com/files/imgopt-0.1.2.tar.gz
+* JPGCrush
+  calls jpegtran -optimize [-restart 1] -scans jpeg_scan_rgb.txt
+  calls jpegtran -optimize [-restart 1] -scans jpeg_scan_bw.txt
+  calls jpegrescan
+  http://akuvian.org/src/jpgcrush.tar.gz
+  https://github.com/wafflesnatcha/bin/blob/master/jpgcrush
+  Please note that `-restart 1' makes the file larger.
+  jpeg_scan_rgb.txt:
+    # https://github.com/jarnoh/lrjpegrescan/blob/master/jpeg_scan_rgb.txt
+    0:   0  0 0 0 ;
+    1 2: 0  0 0 0 ;
+    0:   1  8 0 2 ;
+    1:   1  8 0 0 ;
+    2:   1  8 0 0 ;
+    0:   9 63 0 2 ;
+    0:   1 63 2 1 ;
+    0:   1 63 1 0 ;
+    1:   9 63 0 0 ;
+    2:   9 63 0 0 ;
+  jpeg_scan_bw.txt:
+    0:   0  0 0 0 ;
+    0:   1  8 0 2 ;
+    0:   9 63 0 2 ;
+    0:   1 63 2 1 ;
+    0:   1 63 1 0 ;
+  We can't use it in PDF, because jpegtran -scans generates progressive JPEG.
+* jpegrescan
+  Perl script
+  calls jpegtran -optimize
+  calls jpegtran -optimize -scans ... with many different, refined settings
+  https://raw.githubusercontent.com/kud/jpegrescan/master/jpegrescan
+  We can't use it in PDF, because jpegtran -scans generates progressive JPEG.
+* jpegoptim
+  C program using libjpeg
+  sudo apt-get install jpegoptim
+  https://github.com/tjko/jpegoptim
+  Does lossless optimization by default, can also do lossy.
+  jpegoptim --strip-all file.jpg
+* http://blog.jsdelivr.com/2013/02/jpeg-optimization-tools-benchmark.html
+  comparison of tools:
+  * jpegrescan
+  * JPGCrush
+  * imgopt
+  * jpegtran
+  * jpegoptim
+  Incorrect: jpegoptim is the best for lossless, saves 5% and 13.271%.
+  Correct: jpegrescan is the best
+* For some input, these produce bytewise identical (?), but smaller files:
+  * jpegoptim -t --strip-all *.jpg
+  * imgopt *.jpg
+  * for F in *.jpg; do jpegtran -copy none -optimize -outfile jo.bin "$F" &&
+    mv -f jo.bin "$F"; done
+  ... but make sure to run jfifremove (part of imgopt, simple code, unused)
+  etc. first for removing JFIF, Exif etc. metadata; `-copy none' also
+  removes some stuff (why not all?)
+  jfifremove: https://github.com/kormoc/imgopt/blob/master/jfifremove.c
+* Better JPEG compression: mozjpeg.
+* Better JPEG, PNG, ZIP and Flate compression: ECT
+  https://github.com/fhanau/Efficient-Compression-Tool
+
+  Check out https://github.com/fhanau/Efficient-Compression-Tool - it's a little-known project that's had tons of development recently and consistently beats Google's original implementation both in filesize and in processing time. Oh, and it's also quite a bit easier to use (no messing around choosing filters and number of iterations - you just have a gzip-like 1-9 scale for performance vs time, and 9 times out of 10 the resulting filesize will be similar or even a few bytes smaller than a ZopfliPNG compression run with some crazy number of iterations - say, 500-1000. And it'll take 2% of the time to run that ZopfliPNG would hav e with those types of settings. Oh, and did I mention that it also happens to integrate MozJPEG into the same interface, so it's literally the best tool available for shrinking both PNGs and JPEGs, and that regardless of what crazy lengths you're willing to go to to shave off those last few bytes, this program is really all you need to get 100% of the way anyone's been able to go yet with these two file formats. A truly incredible little project that really deserves to get a lot more attention from people.
+
+  ECT contains a zopfli-fork, with some brotli code cut-and-pasted into it. Recently, the author of ECT asked me to do the same in the official zopfli release, and I tried. I saw some improvements here and there, but an equal amount of worse compression results.
+
+Removing JPEG metadata (e.g. comments, JFIF, Exif etc.) manually:
+
+* 2: d8=SOI marker:
+** 2: '\xff\xd8'  # SOI marker.
+* 18: (e0=APP0)/JFIF marker:
+** Does /DCTDecode work without this?
+** 2: '\xff\xe0   # APP0 marker.
+** 2: '\0\x10'    # Size - 2. So size is actually 18 bytes.
+** 5: 'JFIF\0'    # Type identifier.
+** 2: '\1\2'      # Version of 1.2 of JFIF.
+** 1: '\0'        # Units.
+** 2: '\0\1'      # Horizontal pixel density.
+** 2: '\0\1'      # Vertical pixel density.
+** 1: '\0'        # Thumbnail width.
+** 1: '\0'        # Thumbnail height.
+* Process markers in original JPEG:
+** Copy over these in the original order:
+   db=DQT+ c0=SOF0+ c4=DHT+ da=SOS+.
+   Stop at (excluding) d9=EOI.
+   After the da=SOS marker, copy over the Huffman-coded data following it:
+   scan, copy until (excluding) an ff which is not followed by 00=NUL or
+   d0=RES0...d7==RES7.
+   Image width and height are in the c0 (SOF0) marker.
+** If in strict mode, fail if any marker other than db, c0, d4, da, e0...ef,
+   fe, d8, d9 was found.
+** Drop these markers: e0=APP0...ef=APP15, fe=COM, d8=SOI, d9=EOI.
+   Metadata (JFIF, Exif, XMP, IPTC and ICC) is in COM and APP0...APP15.
+** Fail if found any of these markers: c1=SOF1...c3=SOF3, c5=SOF5...c7=SOF7,
+   c9=SOF9...cb=SOF11, cd=SOF13...cf=SOF15, cc=DAC.
+   SOF2 is for progressive JPEG, SOF0 is for baseline JPEG.
+   DAC defines arithmetic coding.
+* 2: d9=EOI marker.
+** 2: '\xff\xd9' # EOI marker.
+
+More info about JPEG metadata:
+
+* A typical JPEG file has markers in these order:
+  d8=SOI (e0=APP0)/JFIF e1=APP1 e1=APP1 e2=APP2 db=DQT db=DQT fe=COM fe=COM c0=SOF0 c4=DHT c4=DHT c4=DHT c4=DHT da=SOS d9=EIO.
+  The first fe marker (COM, comment) was near offset 30000.
+* A typical JPEG file after filtering through jpegtran:
+  d8=SOI (e0=APP0)/JFIF fe=COM fe=COM db=DQT db=DQT c0=SOF0 c4=DHT c4=DHT c4=DHT c4=DHT da=SOS d9=EOI.
+  The first fe marker (COM, comment) was at offset 20.
+* http://dev.exiv2.org/projects/exiv2/wiki/The_Metadata_in_JPEG_files
+* d4=DHT: define Huffman table
+* da=SOS: for baseline JPEG, there is 1 scan; for progressive JPEG, there can be many
+* Metadata markers:
+** JFIF uses APP0.
+** Comments in COM.
+** Exif uses APP1, APP2.
+** XMP uses APP1.
+** IPTC uses APP13.
+** ICC uses APP2.
+* Details of JFIF: https://www.w3.org/Graphics/JPEG/jfif3.pdf
+
+Removing JPEG metadata (e.g. comments, JFIF, Exif etc.) markers:
+
+* jpegtran -copy none
+  part of libjpeg
+  Doesn't remove everything. (What doesn't it remove?)
+  Removes the APP0 JFIF thumbnail (if any), even with `jpegtran -copy all'.
+* jfifremove
+  https://github.com/kormoc/imgopt/blob/master/jfifremove.c
+  Removes too much (18 bytes).
+* jpegrescan -s
+  jpegrescan -i
+  Perl script
+  https://raw.githubusercontent.com/kud/jpegrescan/master/jpegrescan
+* jpegoptim --strip-all
+  supports many different markers
+* jhead -purejpg *.jpg
+
+** TODO doc: http://jpegmini.com/ makes JPEG files much smaller
+   free web service
+   commercial software with hardware key or license server
+** TODO doc: investigate JPEG without (or trivial Huffman) + /FlateDecode
+   with predictor
+   http://www.impulseadventure.com/photo/jpeg-huffman-coding.html
+   A JPEG file contains up to 4 huffman tables that define the mapping
+   between 1 and 16 bits) and the code values (which is an 8-bit byte).
