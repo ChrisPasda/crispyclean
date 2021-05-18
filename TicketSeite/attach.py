@@ -51,7 +51,7 @@ def sendMail(bam, number):
    s.starttls()
 
 # Authentication
-   s.login(fromaddr, "Cepewe8372ke")
+   s.login(fromaddr, "PASSWORD")
 
 # Converts the Multipart msg into a string
    text = msg.as_string()
