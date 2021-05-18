@@ -62,4 +62,3 @@ def sendMail(bam, number):
 # terminating the session
    s.quit()
 
-sendMail(12312,2)
