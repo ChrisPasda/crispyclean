@@ -1,7 +1,7 @@
 README
 
-Script zum Vergleich von den beiden Excel-Tabellen
+Script to compare two excel-tables
 
-Excel-Tabellen aus Datenschutzgründen nicht enthalten
+excel-tables are not included
 
-Zum Starten ausführen von : python MDM.py
+start with: python MDM.py
