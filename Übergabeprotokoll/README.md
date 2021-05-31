@@ -1,8 +1,8 @@
 README
 
-Script zur Ausgabe vom Namen, Nachnamen und der Bereichsnummer eines Mitarbeiters
+script for printing the surname, prename and the working area
 
-Ausführen und Name eingeben (ruft Seite in DKB-Intern auf, nicht von außen erreichbar)
+execute the script and input the name of the co-worker
 
-Startem mit: python code.py
+start with: python code.py
 

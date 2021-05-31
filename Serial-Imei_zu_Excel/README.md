@@ -1,9 +1,9 @@
 README
 
-Script um die Serien- und Imeinummern der iPads aus einem Bild auszulesen
+scirpt to fetch the serial- and imei-numbers for the ipads out of a picture
 
-Die Inputbilder werden in den Ordner des Script kopiert (aus Datenschutz nicht enthalten)
+copy the input pictures in the folder of the script(not included because of data security)
 
-Danach wird das Script ausgeführt und der Name des Inputbilder wird eingegeben
+start the script and input the name of the picture
 
-Start: python try1.py
+start with: python try1.py

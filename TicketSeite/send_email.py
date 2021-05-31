@@ -3,7 +3,7 @@ import smtplib
 
 def send_email(bam, numbers):
     from_email = "pasdachristopher@gmail.com"
-    from_password ="I_lovemighty"
+    from_password ="PASSWORD"
     to_email = "Christopher.Pasda@dkb-service.de"
 
     subject= "Buchung Notebooks"
