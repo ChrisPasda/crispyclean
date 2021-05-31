@@ -1,6 +1,6 @@
 Repository of working at DKB
 
-The projects are for DKB only and don't work properly without special data
+The projects are for DKB only and don't work properly without special input data
 
 Biggest Projects:
 
