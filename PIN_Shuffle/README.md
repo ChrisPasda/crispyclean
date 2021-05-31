@@ -1,4 +1,7 @@
+README
 
-Ticket-Seite für das Entgegennehmen von Hardware-Bestellungen für Schulungen der DKB-Service GmbH
+Script zur Erstellung von individuellen Sperrcodes für Mitarbeiter
 
-Zum Starten ausführen von : python app.py
+Script starten und Namen eingeben
+
+start mit : python code.py
