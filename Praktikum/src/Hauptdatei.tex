@@ -187,12 +187,6 @@
 
 
 % das Tabellenverzeichnis
-\newpage
-% \fancyhead[L]{Abbildungsverzeichnis / Abkürzungsverzeichnis} %Kopfzeile links
-% Tabellenverzeichnis endgültig anzeigen
-\listoftables
-% Tabellenverzeichnis soll im Inhaltsverzeichnis auftauchen
-\addcontentsline{toc}{section}{Tabellenverzeichnis}
 
 %% WORKAROUND für Listings
 %\makeatletter% --> De-TeX-FAQ
@@ -213,12 +207,7 @@
 %}
 %\makeatother% --> \makeatletter
 % das Listingverzeichnis
-\newpage
-\fancyhead[L]{Listingverzeichnis} %Kopfzeile links
-\renewcommand{\lstlistlistingname}{Listingverzeichnis}
-\lstlistoflistings
-% Listingverzeichnis soll im Inhaltsverzeichnis auftauchen
-\addcontentsline{toc}{section}{Listingverzeichnis}
+
 %%%%
 
 
@@ -257,6 +246,9 @@
 \newpage
 
 \input{5_kap4}
+\newpage
+
+\input{6_kap5}
 \newpage
 % einfacher Zeilenabstand
 
