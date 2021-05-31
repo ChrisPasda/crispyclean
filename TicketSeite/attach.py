@@ -28,7 +28,7 @@ def sendMail(bam, number):
 
 # open the file to be sent
    filename = "test1.docx"
-   attachment = open("C:\\Users\\Chris\\github\\crispyclean\\TRY\\TicketSeite\\test1.docx", "rb")
+   attachment = open("test1.docx", "rb")
 
 # instance of MIMEBase and named as p
    p = MIMEBase('application', 'octet-stream')
