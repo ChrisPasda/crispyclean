@@ -1,7 +1,7 @@
 README
 
-Script zur Erstellung von individuellen Sperrcodes für Mitarbeiter
+Script for creating new indiviual PIN for co-workers telephones
 
-Script starten und Namen eingeben
+start the script and input the name
 
-start mit : python code.py
+start with: python code.py
