@@ -1,4 +1,4 @@
 
-Ticket-Seite für das Entgegennehmen von Hardware-Bestellungen für Schulungen der DKB-Service GmbH
+Ticket-Side for recieving new bookings from the DKB Management School
 
-Zum Starten ausführen von : python app.py
+start with : python app.py
