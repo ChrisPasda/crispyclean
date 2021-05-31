@@ -1,6 +1,6 @@
 README
 
-Script to compare two excel-tables
+script to compare two excel-tables
 
 excel-tables are not included
 
